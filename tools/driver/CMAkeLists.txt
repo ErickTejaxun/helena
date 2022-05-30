@@ -1,0 +1,12 @@
+set(LLVM_LINK_COMPONENTS 
+    Support
+    )
+
+add_helena_tool(helena 
+    Driver.cpp
+    )
+
+target_link_libraries(helena 
+    PRIVATE 
+    helenBasic
+)
