@@ -1,10 +1,10 @@
 %code requires
 {
-    #include "symbol.h"
+    #include "AST.h"
 }
 %{
     #include <iostream>
-    #include "symbol.h"
+    #include "AST.h"
     #include <stdio.h>
     #include <string.h>
     #include <vector>
@@ -32,8 +32,10 @@
     float double_value;
     char string_value[100];
     bool boolean_value;
-    AST * node;    
-}
+    AST * ast;    
+};
+
+
 
 %start start;
 
@@ -44,11 +46,11 @@
 %token <double_value> DOUBLE
 %token <string_value> STRING ID
 
-%type <node> program
-%type <node> block
-%type <node> expression
-%type <node> print 
-%type <node> instruction
+%type <ast> program
+%type <ast> block
+%type <ast> expression
+%type <ast> print 
+%type <ast> instruction
 
 
 %right '!'
