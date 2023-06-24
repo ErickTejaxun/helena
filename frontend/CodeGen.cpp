@@ -8,7 +8,7 @@ using namespace llvm;
 
 namespace{
     class ToIRVisitor: public ASTVisitor{
-        Module *M;
+        Module *M; 
         IRBuilder<> Builder;
         Type *VoidTy;
         Type *Int32Ty;
