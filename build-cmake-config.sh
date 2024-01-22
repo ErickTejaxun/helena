@@ -1,3 +1,9 @@
+Opciones: 
+	-G "Ninja" u otra herramienta de construccion. 
+	-DDLV_USE_LINKER=gold/lld que son opciones más rápidas que BFD linker (default).
+		-LLVM_PARALLEL_LINK_JOBS=N para ajustar el máximo número de threads. 
+
+
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release \
 -DLLVM_EXTERNAL_PROJECTS=helena \
 -DLLVM_EXTERNAL_HELENA_SOURCE_DIR=./../helena -DCMAKE_INSTALL_PREFIX=../llvm-usac ../llvm
@@ -50,8 +56,8 @@ cmake -G Ninja ../llvm -DLLVM_BUILD_EXAMPLES=ON -DLLVM_TARGETS_TO_BUILD="X86" -D
 
 
 
-
-cmake -G Ninja ../llvm  -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly' -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
+--- Used to build the build_debugin
+cmake -G Ninja ../llvm  -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly' -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
 ninja -j8 all 
 
   cmake --build .
