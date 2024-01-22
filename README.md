@@ -6,3 +6,6 @@ differentes optimization passes as polyhedral compilation.
 ## Autor 
 Erick Tejaxún 
 Degree final proyect
+
+## Instructions
+It have created the build-helen.sh script to create the cmake files. This should not be executed in this root folder. 
