@@ -1,7 +1,7 @@
 # This Makefile is designed to be simple and readable.  It does not
 # aim at portability.  It requires GNU Make.
 
-BASE = calc++
+BASE = helen-frontend++
 BISON = bison
 CXX = g++
 FLEX = flex
