@@ -1,9 +1,12 @@
 # This Makefile is designed to be simple and readable.  It does not
 # aim at portability.  It requires GNU Make.
+MLIR_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/mlir/include/
+LLVM_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/build/include/
+LLVM_CURRENT_pATH = /usr/include/llvm-18
 
 BASE = helen-frontend++
 BISON = bison
-CXX = g++
+CXX = clang++-18#g++
 FLEX = flex
 
 all: $(BASE)
@@ -15,7 +18,7 @@ all: $(BASE)
 	$(FLEX) $(FLEXFLAGS) -o$@ $<
 
 %.o: %.cc
-	$(CXX) $(CXXFLAGS) -c -o$@ $<
+	$(CXX) $(CXXFLAGS) -I$(MLIR_INCLUDE_PATH) -I$(LLVM_INCLUDE_PATH) -c -o$@ $< 
 
 $(BASE): $(BASE).o driver.o parser.o scanner.o
 	$(CXX) -o $@ $^

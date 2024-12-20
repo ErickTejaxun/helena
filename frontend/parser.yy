@@ -30,6 +30,7 @@
 %code requires {
   # include <string>
   # include <cmath>
+  # include "AST.h"
   class driver;
 }
 
@@ -56,6 +57,7 @@
   SLASH   "/"
   LPAREN  "("
   RPAREN  ")"
+  SEMICOLON ";"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -73,10 +75,12 @@ assignments:
 | assignments assignment {};
 
 assignment:
-  "identifier" ":=" exp { drv.variables[$1] = $3; };
+  "identifier" ":=" exp ";"{ drv.variables[$1] = $3; };
 
 %left "+" "-";
 %left "*" "/";
+%left "**";
+
 exp:
   "number"
 | "identifier"  { $$ = drv.variables[$1]; }
