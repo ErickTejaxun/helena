@@ -65,15 +65,23 @@
 %token <int> NUMBER "number"
 //%nterm <int> exp
 %nterm <std::unique_ptr<Expression>> exp
-//%nterm <std::unique_ptr<Block>> assignments
-//%nterm <std::unique_ptr<Block>> unit
-%nterm <std::unique_ptr<Instruction>> assignment 
+%nterm <std::unique_ptr<Block>> block
+%nterm <std::unique_ptr<Instruction>> assignment
+%nterm <std::unique_ptr<Instruction>> instruction
 
 //%printer { yyo << $$; } <*>;
 
 %%
-%start assignment;
+%start block;
 
+block: 
+  %empty                 {$$= std::make_unique<Block>(0,0);}
+| block instruction      {$$ = std::move($1); $$->addInstruction(std::move($2));}
+;
+
+instruction: 
+  assignment { $$ = std::move($1);}
+;
 
 assignment:
   "identifier" "=" exp ";"{ $$= std::make_unique<Assignation>(0,0,std::move($1),std::move($3));}
