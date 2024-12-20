@@ -22,6 +22,7 @@
 # include <string>
 # include <map>
 # include "parser.hh"
+# include "AST.h"
 
 // Give Flex the prototype of yylex we want ...
 # define YY_DECL \
@@ -29,13 +30,15 @@
 // ... and declare it for the parser's sake.
 YY_DECL;
 
-// Conducting the whole scanning and parsing of Calc++.
+// Conducting the whole scanning and parsing of Helena++.
 class driver
 {
 public:
   driver ();
 
-  std::map<std::string, int> variables;
+  //std::map<std::string, int> variables;
+  std::unique_ptr<Program> root;
+
 
   int result;
 

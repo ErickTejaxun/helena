@@ -36,6 +36,7 @@
 
 // The parsing context.
 %param { driver& drv }
+//%param { std::unique_ptr<Instruction> root }
 
 %locations
 
@@ -68,11 +69,15 @@
 %nterm <std::unique_ptr<Block>> block
 %nterm <std::unique_ptr<Instruction>> assignment
 %nterm <std::unique_ptr<Instruction>> instruction
-
+%nterm <std::unique_ptr<Program>> program
 //%printer { yyo << $$; } <*>;
 
 %%
-%start block;
+%start program;
+
+program:
+  block { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
+;
 
 block: 
   %empty                 {$$= std::make_unique<Block>(0,0);}

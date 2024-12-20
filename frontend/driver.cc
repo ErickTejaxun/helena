@@ -20,11 +20,9 @@
 #include "driver.hh"
 #include "parser.hh"
 
-driver::driver ()
-  : trace_parsing (false), trace_scanning (false)
+driver::driver () : trace_parsing (false), trace_scanning (false)
 {
-  variables["one"] = 1;
-  variables["two"] = 2;
+  
 }
 
 int driver::parse (const std::string &f)
@@ -36,5 +34,9 @@ int driver::parse (const std::string &f)
   parse.set_debug_level (trace_parsing);
   int res = parse ();
   scan_end ();
+
+  std::cout<<"Starting AST traversal." << std::endl;
+  
+
   return res;
 }
