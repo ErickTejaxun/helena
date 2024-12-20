@@ -129,7 +129,7 @@ blank [ \t\r]
 
 "-"        return yy::parser::make_MINUS  (loc);
 "+"        return yy::parser::make_PLUS   (loc);
-"**"       return yy::parser::make_POWER   (loc);
+"**"       return yy::parser::make_POWER  (loc);
 "*"        return yy::parser::make_STAR   (loc);
 "/"        return yy::parser::make_SLASH  (loc);
 "("        return yy::parser::make_LPAREN (loc);

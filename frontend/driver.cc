@@ -27,8 +27,7 @@ driver::driver ()
   variables["two"] = 2;
 }
 
-int
-driver::parse (const std::string &f)
+int driver::parse (const std::string &f)
 {
   file = f;
   location.initialize (&file);

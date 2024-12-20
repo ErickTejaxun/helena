@@ -57,21 +57,21 @@ public:
 class ASTNode
 {
 public:
-    virtual void getLine() /* = defualt */;
-    virtual void getColumn() /* = defualt */;
-    //virtual ~ASTNode() = default;
+    //virtual void getLine() /* = defualt */;
+    //virtual void getColumn() /* = defualt */;
+    virtual ~ASTNode() = default;
 };
 
 class Expression : public ASTNode
 {
 public:
-    virtual void getValue() /* = defualt */;
+    //virtual void getValue() /* = defualt */;
 };
 
 class Instruction : public ASTNode
 {
 public:
-    virtual void execute() /* = defualt */;
+    //virtual void execute() /* = defualt */;
 };
 
 
@@ -113,13 +113,13 @@ public:
     StringExp(int line, int column, const std::string &value) : line(line), column(column), value(value) {}
 };
 
-class IntegerExp : public Expression
+class IntExp : public Expression
 {
     int value;
     int line, column;
 
 public:
-    IntegerExp(int line, int column, int value) : line(line), column(column), value(value) {}
+    IntExp(int line, int column, int value) : line(line), column(column), value(value) {}
 };
 
 class DoubleExp : public Expression
@@ -157,13 +157,13 @@ public:
     NullExp(int line, int column) : line(line), column(column) {}
 };
 
-class VariableExp : public Expression
+class VarExp : public Expression
 {
     std::string name;
     int line, column;
 
 public:
-    VariableExp(int line, int column, const std::string &name) : line(line), column(column), name(name) {}
+    VarExp(int line, int column, const std::string &name) : line(line), column(column), name(name) {}
 
     std::string getName()
     {
@@ -171,13 +171,13 @@ public:
     }
 };
 
-class AddExpression : public Expression
+class AddExp : public Expression
 {
     std::unique_ptr<Expression> left_expression, right_expression;
     int line, column;
 
 public:
-    AddExpression(int line, int column,
+    AddExp(int line, int column,
                 std::unique_ptr<Expression> left_expression,
                 std::unique_ptr<Expression> right_expression) 
                 : line(line), column(column),
@@ -185,26 +185,26 @@ public:
                 right_expression(std::move(right_expression)) {}
 };
 
-class SubstractionExpression : public Expression
+class SubExp : public Expression
 {
     std::unique_ptr<Expression> left_expression, right_expression;
     int line, column;
 
 public:
-    SubstractionExpression(int line, int column,
+    SubExp(int line, int column,
                         std::unique_ptr<Expression> left_expression,
                         std::unique_ptr<Expression> right_expression) : line(line), column(column),
                         left_expression(std::move(left_expression)),
                         right_expression(std::move(right_expression)) {}
 };
 
-class MultiplicationExpression : public Expression
+class MulExp : public Expression
 {
     std::unique_ptr<Expression> left_expression, right_expression;
     int line, column;
 
 public:
-    MultiplicationExpression(int line, int column,
+    MulExp(int line, int column,
                              std::unique_ptr<Expression> left_expression,
                              std::unique_ptr<Expression> right_expression) 
                              : line(line), column(column),
@@ -212,13 +212,13 @@ public:
                                 right_expression(std::move(right_expression)) {}
 };
 
-class DivisionExpression : public Expression
+class DivExp : public Expression
 {
     std::unique_ptr<Expression> left_expression, right_expression;
     int line, column;
 
 public:
-    DivisionExpression(int line, int column,
+    DivExp(int line, int column,
                        std::unique_ptr<Expression> left_expression,
                        std::unique_ptr<Expression> right_expression) 
                        : line(line), column(column), 
@@ -457,20 +457,20 @@ public:
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 };
 
-// class IfInst : private Instruction
-// {
-//     int line, column;
-//     std::optional<std::unique_ptr<Expression>> condition;
-//     std::optional<std::unique_ptr<IfInst>> elseIf;
-//     std::unique_ptr<Block> block;
+class IfInst : private Instruction
+{
+    int line, column;
+    std::optional<std::unique_ptr<Expression>> condition;
+    std::optional<std::unique_ptr<IfInst>> elseIf;
+    std::unique_ptr<Block> block;
 
-// public:
-//     IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block) 
-//     : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
+public:
+    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block) 
+    : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-//     IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf) 
-//     : line(line), column(column), 
-//         condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
-// };
+    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf) 
+    : line(line), column(column), 
+        condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
+};
 
 #endif

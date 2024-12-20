@@ -45,11 +45,12 @@
 
 %code {
 # include "driver.hh"
+# include "AST.h"
 }
 
 %define api.token.prefix {TOK_}
 %token
-  ASSIGN  ":="
+  ASSIGN  "="
   MINUS   "-"
   PLUS    "+"
   POWER   "**"
@@ -62,34 +63,35 @@
 
 %token <std::string> IDENTIFIER "identifier"
 %token <int> NUMBER "number"
-%nterm <int> exp
+//%nterm <int> exp
+%nterm <std::unique_ptr<Expression>> exp
+//%nterm <std::unique_ptr<Block>> assignments
+//%nterm <std::unique_ptr<Block>> unit
+%nterm <std::unique_ptr<Instruction>> assignment 
 
-%printer { yyo << $$; } <*>;
+//%printer { yyo << $$; } <*>;
 
 %%
-%start unit;
-unit: assignments exp  { drv.result = $2; };
+%start assignment;
 
-assignments:
-  %empty                 {}
-| assignments assignment {};
 
 assignment:
-  "identifier" ":=" exp ";"{ drv.variables[$1] = $3; };
+  "identifier" "=" exp ";"{ $$= std::make_unique<Assignation>(0,0,std::move($1),std::move($3));}
+  ;
 
 %left "+" "-";
 %left "*" "/";
 %left "**";
 
 exp:
-  "number"
-| "identifier"  { $$ = drv.variables[$1]; }
-| exp "+" exp   { $$ = $1 + $3; }
-| exp "-" exp   { $$ = $1 - $3; }
-| exp "*" exp   { $$ = $1 * $3; }
-| exp "/" exp   { $$ = $1 / $3; }
-| exp "**" exp  { $$ = pow($1, $3); }
-| "(" exp ")"   { $$ = $2; }
+  "number"      { $$ = std::make_unique<IntExp>(0,0,std::move($1));}
+| "identifier"  { $$ = std::make_unique<VarExp>(0,0,std::move($1));}
+| exp "+" exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
+| exp "-" exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
+| exp "*" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
+| exp "/" exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
+| "(" exp ")"   { $$ = std::move($2); }
+;
 %%
 
 void
