@@ -3,6 +3,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/Value.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -60,6 +61,7 @@ public:
     //virtual void getLine() /* = defualt */;
     //virtual void getColumn() /* = defualt */;
     virtual ~ASTNode() = default;
+    virtual llvm::Value *codgen() = 0;
 };
 
 class Expression : public ASTNode

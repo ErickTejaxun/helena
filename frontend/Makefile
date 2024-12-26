@@ -2,6 +2,7 @@
 # aim at portability.  It requires GNU Make.
 MLIR_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/mlir/include/
 LLVM_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/build/include/
+LLVM_C_INCLUDE_PATH = /usr/include/llvm-c-18
 LLVM_CURRENT_pATH = /usr/include/llvm-18
 
 BASE = helen-frontend++
@@ -18,7 +19,7 @@ all: $(BASE)
 	$(FLEX) $(FLEXFLAGS) -o$@ $<
 
 %.o: %.cc
-	$(CXX) $(CXXFLAGS) -I$(MLIR_INCLUDE_PATH) -I$(LLVM_INCLUDE_PATH) -c -o$@ $< 
+	$(CXX) $(CXXFLAGS) -I$(MLIR_INCLUDE_PATH) -I$(LLVM_INCLUDE_PATH) -I$(LLVM_C_INCLUDE_PATH) -c -o$@ $< 
 
 $(BASE): $(BASE).o driver.o parser.o scanner.o
 	$(CXX) -o $@ $^
