@@ -132,7 +132,7 @@ returni:
 
 type:
   "identifier" {$$=std::make_unique<Type>(TCLASS, $1);}
-  | "tint" {$$ = std::make_unique<Type>(TINT);}
+  | "int" {$$ = std::make_unique<Type>(TINT);}
 ;
 
 fparameters: 
@@ -158,6 +158,7 @@ exp:
 | exp "+" exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
 | exp "-" exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
 | exp "*" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
+| exp "**" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
 | exp "/" exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
 | "(" exp ")"   { $$ = std::move($2); }
 ;
