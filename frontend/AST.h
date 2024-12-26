@@ -464,7 +464,7 @@ public:
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 };
 
-class IfInst : private Instruction
+class IfInst : public Instruction
 {
     int line, column;
     std::optional<std::unique_ptr<Expression>> condition;
@@ -478,6 +478,15 @@ public:
     IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf) 
     : line(line), column(column), 
         condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
+};
+
+class ReturnInst: public Instruction{
+    int line, column;
+    std::unique_ptr<Expression> exp;
+
+    public:
+        ReturnInst(int line, int column, std::unique_ptr<Expression> exp)
+            : line(line), column(column), exp(std::move(exp)){}
 };
 
 #endif

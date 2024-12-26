@@ -64,13 +64,14 @@
   RCBRACKET "}"
   COMMA ","
   TINT "int"
+  RETURN "return"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
 %token <int> NUMBER "number"
 //%nterm <int> exp
 %nterm <std::unique_ptr<Expression>> exp
-%nterm <std::unique_ptr<Block>> block
+//%nterm <std::unique_ptr<Block>> block
 %nterm <std::unique_ptr<Block>> linstructions
 %nterm <std::unique_ptr<Instruction>> assignment
 %nterm <std::unique_ptr<Instruction>> instruction
@@ -79,6 +80,11 @@
 %nterm <std::unique_ptr<Type>> type
 %nterm <std::unique_ptr<Parameter>> fparameter
 %nterm <std::unique_ptr<FormalParameters>> fparameters
+%nterm <std::unique_ptr<Block>> blockf
+%nterm <std::unique_ptr<Block>> linstructionf
+%nterm <std::unique_ptr<Instruction>> returni
+%nterm <std::unique_ptr<Instruction>> instructionf
+
 
 %printer { yyo << "Error---"; } <*>;
 
@@ -86,11 +92,11 @@
 %start program;
 
 program:
-  block { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
+  linstructions { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
 ;
 
-block: "{" linstructions "}" {$$ = std::move($2);}
-;
+//block: "{" linstructions "}" {$$ = std::move($2);}
+//;
 
 linstructions: 
   %empty                 {$$= std::make_unique<Block>(0,0);}
@@ -103,7 +109,25 @@ instruction:
 ;
 
 function:
-  type "identifier" "(" fparameters ")" block {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
+  type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
+;
+
+blockf:
+  "{" linstructionf "}" {$$=std::move($2);}
+;
+
+linstructionf: 
+   %empty                        {$$= std::make_unique<Block>(0,0);}
+  |linstructionf instructionf      {$$ = std::move($1); $$->addInstruction(std::move($2));}
+;
+
+instructionf:
+  instruction {$$=std::move($1);}
+| returni { $$ = std::move($1);}
+;
+
+returni:
+  "return" exp ";" {$$=std::make_unique<ReturnInst>(0,0,std::move($2));}
 ;
 
 type:
