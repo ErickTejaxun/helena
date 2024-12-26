@@ -19,20 +19,46 @@
 
 #include <iostream>
 #include "driver.hh"
+#include <fstream>
 
 int
 main (int argc, char *argv[])
 {
   int res = 0;
   driver drv;
-  for (int i = 1; i < argc; ++i)
-    if (argv[i] == std::string ("-p"))
-      drv.trace_parsing = true;
-    else if (argv[i] == std::string ("-s"))
-      drv.trace_scanning = true;
-    else if (!drv.parse (argv[i]))
-      std::cout << drv.result << '\n';
-    else
-      res = 1;
-  return res;
+  // for (int i = 1; i < argc; ++i)
+  //   if (argv[i] == std::string ("-p"))
+  //     drv.trace_parsing = true;
+  //   else if (argv[i] == std::string ("-s"))
+  //     drv.trace_scanning = true;
+  //   else if (!drv.parse (argv[i]))
+  //     std::cout << drv.result << '\n';
+  //   else
+  //     res = 1;
+  if(argc < 2){
+    std::cout << "Error. helen-frontend++ <file>"<<std::endl;    
+    return res;
+  }    
+  
+    
+  ifstream inputFile(argv[1]);
+  
+  std::string line;
+  std::string programContent = "";  
+  
+  while (getline(inputFile, line)) {
+      programContent += line;
+  }
+  
+  inputFile.close();
+
+  std::cout<< programContent << std::endl;
+  
+  
+  //parse
+  if(drv.parse(argv[1])){
+    std::cout<< drv.result << std::endl;
+  }
+
+  return 0;
 }

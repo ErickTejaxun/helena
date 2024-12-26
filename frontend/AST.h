@@ -66,12 +66,14 @@ class Expression : public ASTNode
 {
 public:
     //virtual void getValue() /* = defualt */;
+    virtual ~Expression() = default;
 };
 
 class Instruction : public ASTNode
 {
 public:
     //virtual void execute() /* = defualt */;
+    virtual ~Instruction() = default;
 };
 
 
@@ -249,30 +251,34 @@ enum TYPE
     TFLOAT,
     TCHAR,
     TBOOL,
-    TVOID
+    TVOID,
+    TCLASS
 };
 
 class Type
 {
     TYPE type;
+    std::string name;
 
 public:
     Type(TYPE type) : type(type) {}
+    Type(TYPE type, const std::string name): type(type), name(name){}
 };
 /*************/
 
 class Parameter : public Instruction
 {
     std::string name;
-    Type type;
+    std::unique_ptr<Type> type;
     int line, column;
-    std::optional<std::unique_ptr<ArrayLevel>> levels;
+    std::optional<std::unique_ptr<ArrayLevel>> levels; 
 
 public:
-    Parameter(int line, int column, Type *type, std::string &name) : line(line), column(column), type(*type), name(name) {}
+    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name) 
+        : line(line), column(column), type(std::move(type)), name(name) {}
 
-    Parameter(int line, int column, Type *type, std::string &name, std::unique_ptr<ArrayLevel> arraylevel) 
-        : line(line), column(column), type(*type), name(name), levels(std::move(arraylevel)) {}
+    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name, std::unique_ptr<ArrayLevel> arraylevel) 
+        : line(line), column(column), type(std::move(type)), name(name), levels(std::move(arraylevel)) {}
 };
 
 class FormalParameters : public Instruction
@@ -285,7 +291,7 @@ public:
 
     FormalParameters(std::list<std::unique_ptr<Parameter>> parameters): parameters(std::move(parameters)){}
 
-    [[deprecated("Ya no es compatible, o quizá si :v")]] 
+    //[[deprecated("Ya no es compatible, o quizá si :v")]] 
     bool addParameter(std::unique_ptr<Parameter> parameter)
     {
         this->parameters.push_back(std::move(parameter));
@@ -315,15 +321,16 @@ public:
 class FunctionInst : public Instruction
 {
     std::string name;
-    std::vector<std::unique_ptr<Parameter>> formal_parameters;
+    //std::vector<std::unique_ptr<Parameter>> formalParameters;
+    std::unique_ptr<FormalParameters> formalParameters;
     std::unique_ptr<Block> body;
     int line, column;
 
 public:
     FunctionInst(int line, int column, const std::string &name,
-                 std::vector<std::unique_ptr<Parameter>> formal_parameters, std::unique_ptr<Block> body) 
+                 std::unique_ptr<FormalParameters> formalParameters, std::unique_ptr<Block> body) 
                  : line(line), column(column), name(name), 
-                    formal_parameters(std::move(formal_parameters)), body(std::move(body)) {}
+                    formalParameters(std::move(formalParameters)), body(std::move(body)) {}
 };
 
 

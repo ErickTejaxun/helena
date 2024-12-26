@@ -60,6 +60,10 @@
   LPAREN  "("
   RPAREN  ")"
   SEMICOLON ";"
+  LCBRACKET "{"
+  RCBRACKET "}"
+  COMMA ","
+  TINT "int"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -67,10 +71,16 @@
 //%nterm <int> exp
 %nterm <std::unique_ptr<Expression>> exp
 %nterm <std::unique_ptr<Block>> block
+%nterm <std::unique_ptr<Block>> linstructions
 %nterm <std::unique_ptr<Instruction>> assignment
 %nterm <std::unique_ptr<Instruction>> instruction
 %nterm <std::unique_ptr<Program>> program
-//%printer { yyo << $$; } <*>;
+%nterm <std::unique_ptr<FunctionInst>> function
+%nterm <std::unique_ptr<Type>> type
+%nterm <std::unique_ptr<Parameter>> fparameter
+%nterm <std::unique_ptr<FormalParameters>> fparameters
+
+%printer { yyo << "Error---"; } <*>;
 
 %%
 %start program;
@@ -79,13 +89,35 @@ program:
   block { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
 ;
 
-block: 
+block: "{" linstructions "}" {$$ = std::move($2);}
+;
+
+linstructions: 
   %empty                 {$$= std::make_unique<Block>(0,0);}
-| block instruction      {$$ = std::move($1); $$->addInstruction(std::move($2));}
+| linstructions instruction      {$$ = std::move($1); $$->addInstruction(std::move($2));}
 ;
 
 instruction: 
   assignment { $$ = std::move($1);}
+| function {$$ = std::move($1);}
+;
+
+function:
+  type "identifier" "(" fparameters ")" block {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
+;
+
+type:
+  "identifier" {$$=std::make_unique<Type>(TCLASS, $1);}
+  | "tint" {$$ = std::make_unique<Type>(TINT);}
+;
+
+fparameters: 
+    %empty {$$=std::make_unique<FormalParameters>();}
+  | fparameters "," fparameter {$$=std::move($1); $$->addParameter(std::move($3));}
+;
+
+fparameter:
+  type "identifier" { $$= std::make_unique<Parameter>(0,0,std::move($1),$2);}
 ;
 
 assignment:

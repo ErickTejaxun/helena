@@ -136,7 +136,10 @@ blank [ \t\r]
 ")"        return yy::parser::make_RPAREN (loc);
 "="        return yy::parser::make_ASSIGN (loc);
 ";"        return yy::parser::make_SEMICOLON (loc);
-
+"{"        return yy::parser::make_LCBRACKET (loc);
+"}"        return yy::parser::make_RCBRACKET (loc);
+","        return yy::parser::make_COMMA (loc);
+int        return yy::parser::make_TINT (loc);
 {int}      return make_NUMBER (yytext, loc);
 {id}       return yy::parser::make_IDENTIFIER (yytext, loc);
 .          {
