@@ -41,7 +41,7 @@ main (int argc, char *argv[])
   }    
   
     
-  ifstream inputFile(argv[1]);
+  std::ifstream inputFile(argv[1]);
   
   std::string line;
   std::string programContent = "";  

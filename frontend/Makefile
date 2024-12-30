@@ -1,13 +1,14 @@
 # This Makefile is designed to be simple and readable.  It does not
 # aim at portability.  It requires GNU Make.
-MLIR_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/mlir/include/
-LLVM_INCLUDE_PATH = /usr/include/llvm-18#/home/erick/llvm-project/build/include/
-LLVM_C_INCLUDE_PATH = /usr/include/llvm-c-18
-LLVM_CURRENT_pATH = /usr/include/llvm-18
+# /usr/bin/clang++-18
+MLIR_INCLUDE_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18#/home/erick/llvm-project/mlir/include/
+LLVM_INCLUDE_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18#/home/erick/llvm-project/build/include/
+LLVM_C_INCLUDE_PATH = /home/erick/llvm-project/build/include/
+LLVM_CURRENT_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18
 
 BASE = helen-frontend++
 BISON = bison
-CXX = clang++-18#g++
+CXX = /home/erick/llvm-project/build/bin/clang++ #clang++-18#g++
 FLEX = flex
 
 all: $(BASE)

@@ -4,10 +4,12 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/llvm-18"
+                "/home/erick/llvm-project/llvm/include/llvm",
+                "/home/erick/llvm-project/llvm/include/llvm-c",
+                "/home/erick/llvm-project/llvm/include"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang++-18",
+            "compilerPath": "/home/erick/llvm-project/build/bin/clang++",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-clang-x64"
