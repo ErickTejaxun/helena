@@ -3,18 +3,18 @@
 # /usr/bin/clang++-18
 MLIR_INCLUDE_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18#/home/erick/llvm-project/mlir/include/
 LLVM_INCLUDE_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18#/home/erick/llvm-project/build/include/
-LLVM_C_INCLUDE_PATH = /home/erick/llvm-project/build3/include/
+LLVM_C_INCLUDE_PATH = /home/erick/llvm-project/build4/include/
 LLVM_CURRENT_PATH = /home/erick/llvm-project/llvm/include/#/usr/include/llvm-18
 
 BASE= helen-frontend++
 BISON=bison
-CXX=/home/erick/llvm-project/build3/bin/clang++ #clang++-18#g++
+CXX=/home/erick/llvm-project/build4/bin/clang++ #clang++-18#g++
 FLEX=flex
 #BISONFLAGS=$(llvm-config --cxxflags) 
 #CXXFLAGS=$(llvm-config --cxxflags)
 #-fno-exceptions
 #$(llvm-config --ldflags) $(llvm-config --libs)
-CXXFLAGS = -I/home/erick/llvm-project/llvm/include -I/home/erick/llvm-project/build3/include -std=c++17 -funwind-tables -frtti -D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -L/home/erick/Descargas/llvm-project-main/build3/lib
+CXXFLAGS = -L/home/erick/llvm-project/build4/lib -I/home/erick/llvm-project/llvm/include -I/home/erick/llvm-project/build4/include -std=c++17 -funwind-tables -frtti -D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 
 all: $(BASE)
 
@@ -25,10 +25,10 @@ all: $(BASE)
 	$(FLEX) $(FLEXFLAGS) -o$@ $<
 
 %.o: %.cc
-	$(CXX) -fuse-ld=lld  $(CXXFLAGS) -c -o$@ $< 
+	$(CXX) $(CXXFLAGS) -c -o$@ $< 
 
 $(BASE): $(BASE).o driver.o parser.o scanner.o
-	$(CXX) -fuse-ld=lld  $(CXXFLAGS)  -o $@ $^
+	$(CXX) -v -fuse-ld=lld  $(CXXFLAGS) -lLLVMSupport -o $@ $^
 
 $(BASE).o: parser.hh
 parser.o: parser.hh
@@ -46,4 +46,4 @@ clean:
 	rm -f $(CLEANFILES)
 
 
-#/home/erick/llvm-project/build/bin/clang++ $(llvm-config --cxxflags)  -frtti  -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/build3/include/ -c -ohelen-frontend++.o helen-frontend++.cc 
+#/home/erick/llvm-project/build/bin/clang++ $(llvm-config --cxxflags)  -frtti  -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/build4/include/ -c -ohelen-frontend++.o helen-frontend++.cc 
