@@ -44,6 +44,3 @@ CLEANFILES =										\
   scanner.cc
 clean:
 	rm -f $(CLEANFILES)
-
-
-#/home/erick/llvm-project/build/bin/clang++ $(llvm-config --cxxflags)  -frtti  -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/llvm/include/ -I/home/erick/llvm-project/build4/include/ -c -ohelen-frontend++.o helen-frontend++.cc 

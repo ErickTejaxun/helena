@@ -339,7 +339,9 @@ public:
     Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name, std::unique_ptr<ArrayLevel> arraylevel) 
         : line(line), column(column), type(std::move(type)), name(name), levels(std::move(arraylevel)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class FormalParameters : public Instruction
@@ -359,7 +361,9 @@ public:
         return true;
     }
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class Block : public Instruction
@@ -379,7 +383,9 @@ public:
         return true;
     }
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 
@@ -397,7 +403,9 @@ public:
                  : line(line), column(column), name(name), 
                     formalParameters(std::move(formalParameters)), body(std::move(body)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 
@@ -412,7 +420,9 @@ public:
             : imports(std::move(imports)), 
             globals(std::move(globals)) {}    
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class Import : public Instruction
@@ -580,7 +590,9 @@ class ReturnInst: public Instruction{
         ReturnInst(int line, int column, std::unique_ptr<Expression> exp)
             : line(line), column(column), exp(std::move(exp)){}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 #endif

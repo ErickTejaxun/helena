@@ -89,60 +89,60 @@
 %printer { yyo << "Error---"; } <*>;
 
 %%
-%start assignment;
+%start program;
 
-// program:
-//   linstructions { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
-// ;
+program:
+  linstructions { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
+;
 
-// //block: "{" linstructions "}" {$$ = std::move($2);}
-// //;
+//block: "{" linstructions "}" {$$ = std::move($2);}
+//;
 
-// linstructions: 
-//   %empty                 {$$= std::make_unique<Block>(0,0);}
-// | linstructions instruction      {$$ = std::move($1); $$->addInstruction(std::move($2));}
-// ;
+linstructions: 
+  %empty                 {$$= std::make_unique<Block>(0,0);}
+| linstructions instruction      {$$ = std::move($1); $$->addInstruction(std::move($2));}
+;
 
-// instruction: 
-//   assignment { $$ = std::move($1);}
-// | function {$$ = std::move($1);}
-// ;
+instruction: 
+  assignment { $$ = std::move($1);}
+| function {$$ = std::move($1);}
+;
 
-// function:
-//   type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
-// ;
+function:
+  type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
+;
 
-// blockf:
-//   "{" linstructionf "}" {$$=std::move($2);}
-// ;
+blockf:
+  "{" linstructionf "}" {$$=std::move($2);}
+;
 
-// linstructionf: 
-//    %empty                        {$$= std::make_unique<Block>(0,0);}
-//   |linstructionf instructionf      {$$ = std::move($1); $$->addInstruction(std::move($2));}
-// ;
+linstructionf: 
+   %empty                        {$$= std::make_unique<Block>(0,0);}
+  |linstructionf instructionf      {$$ = std::move($1); $$->addInstruction(std::move($2));}
+;
 
-// instructionf:
-//   instruction {$$=std::move($1);}
-// | returni { $$ = std::move($1);}
-// ;
+instructionf:
+  instruction {$$=std::move($1);}
+| returni { $$ = std::move($1);}
+;
 
-// returni:
-//   "return" exp ";" {$$=std::make_unique<ReturnInst>(0,0,std::move($2));}
-// ;
+returni:
+  "return" exp ";" {$$=std::make_unique<ReturnInst>(0,0,std::move($2));}
+;
 
-// type:
-//   "identifier" {$$=std::make_unique<Type>(TCLASS, $1);}
-//   | "int" {$$ = std::make_unique<Type>(TINT);}
-// ;
+type:
+  "identifier" {$$=std::make_unique<Type>(TCLASS, $1);}
+  | "int" {$$ = std::make_unique<Type>(TINT);}
+;
 
-// fparameters: 
-//     %empty {$$=std::make_unique<FormalParameters>();}
-//   | fparameters "," fparameter {$$=std::move($1); $$->addParameter(std::move($3));}
-// ;
+fparameters: 
+    %empty {$$=std::make_unique<FormalParameters>();}
+  | fparameters "," fparameter {$$=std::move($1); $$->addParameter(std::move($3));}
+;
 
-// fparameter:
-//   type "identifier" { $$= std::make_unique<Parameter>(0,0,std::move($1),$2);}
-// ;
+fparameter:
+  type "identifier" { $$= std::make_unique<Parameter>(0,0,std::move($1),$2);}
+;
 
 assignment:
   "identifier" "=" exp ";"{ $$= std::make_unique<Assignation>(0,0,std::move($1),std::move($3));}
