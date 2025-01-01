@@ -79,28 +79,26 @@ public:
 
 class ASTNode
 {
-public:
-    //virtual void getLine() /* = defualt */;
-    //virtual void getColumn() /* = defualt */;
-    virtual ~ASTNode() = default;    
+public:    
+    virtual ~ASTNode() = default;
+    virtual llvm::Value *codegen() = 0;
 };
 
 class Expression : public ASTNode
 {
 public:
-    //virtual void getValue() /* = defualt */;
-    virtual ~Expression() = default;
 
-    virtual llvm::Value *codegen() = 0;
+    virtual ~Expression() = default;    
+    llvm::Value* codegen() override = 0;
+    virtual void print(){ }
 };
 
 class Instruction : public ASTNode
 {
-public:
-    //virtual void execute() /* = defualt */;
+public:    
     virtual ~Instruction() = default;
-
-    virtual llvm::Value *codegen() = 0;
+    llvm::Value *codegen() override = 0;
+    virtual void print() { }
 };
 
 
@@ -152,7 +150,9 @@ class IntExp : public Expression
 public:
     IntExp(int line, int column, int value) : line(line), column(column), value(value) {}
     
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class DoubleExp : public Expression
@@ -209,7 +209,9 @@ public:
         return this->name;
     }
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class AddExp : public Expression
@@ -225,7 +227,9 @@ public:
                 left_expression(std::move(left_expression)),
                 right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class SubExp : public Expression
@@ -240,7 +244,9 @@ public:
                         left_expression(std::move(left_expression)),
                         right_expression(std::move(right_expression)) {}
     
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class MulExp : public Expression
@@ -256,7 +262,9 @@ public:
                                 left_expression(std::move(left_expression)),
                                 right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class DivExp : public Expression
@@ -272,7 +280,9 @@ public:
                         left_expression(std::move(left_expression)), 
                         right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class CallExpression : public Expression
@@ -496,7 +506,9 @@ public:
         : line(line), column(column), name(name), expression(std::move(expression)) {}
 
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+            return nullptr; // Placeholder
+    }
 };
 
 class For : public Instruction

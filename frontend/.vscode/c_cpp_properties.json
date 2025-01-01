@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "/home/erick/llvm-project/llvm/include/llvm",
                 "/home/erick/llvm-project/llvm/include/llvm-c",
-                "/home/erick/llvm-project/llvm/include"
+                "/home/erick/llvm-project/llvm/include",
+                "/home/erick/llvm-project/build/include"
             ],
             "defines": [],
             "compilerPath": "/home/erick/llvm-project/build/bin/clang++",
