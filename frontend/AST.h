@@ -23,10 +23,10 @@
 class Error;
 class ASTNode;
 
-// static std::unique_ptr<llvm::LLVMContext> TheContext;
-// static std::unique_ptr<llvm::Module> TheModule;
-// static std::unique_ptr<llvm::IRBuilder<>> Builder;
-// static std::map<std::string, llvm::Value *> NamedValues;
+static std::unique_ptr<llvm::LLVMContext> TheContext;
+static std::unique_ptr<llvm::IRBuilder<>> Builder;
+static std::unique_ptr<llvm::Module> TheModule;
+static std::map<std::string, llvm::Value *> NamedValues;
 
 // std::unique_ptr<ASTNode> LogError(const char *Str) {
 //   fprintf(stderr, "Error: %s\n", Str);
@@ -162,7 +162,10 @@ class DoubleExp : public Expression
 
 public:
     DoubleExp(int line, int column, double value) : line(line), column(column), value(value) {}
-    llvm::Value *codegen() override;
+
+    llvm::Value *codegen() override{
+        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
+    }
 };
 
 class FloatExp : public Expression

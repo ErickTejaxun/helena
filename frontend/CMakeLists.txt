@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 project(helen-frontend++)
 
 # Set explicit paths to Clang++ and LLD
@@ -10,18 +10,11 @@ set(FLEX /usr/bin/flex)
 message(STATUS "Using Clang++: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Using LLD: ${CMAKE_LINKER}")
 
-# Set LLVM include directories (if needed - usually not necessary with explicit compiler/linker)
-# If you get include errors, uncomment these and adjust paths if necessary.
-#set(LLVM_INCLUDE_DIRS
-#  "/home/user/llvmbuild/include" # Adjust if your includes are elsewhere
-#)
-#include_directories(${LLVM_INCLUDE_DIRS})
-
-
 # Set compiler flags
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funwind-tables -frtti")
-add_definitions(-D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funwind-tables -frtti -lLLVMSupport -L/home/erick/llvm-project/build4/lib")
+set(CMAKE_CXX_FLAGS " -L/home/erick/llvm-project/build4/lib -I/home/erick/llvm-project/llvm/include -I/home/erick/llvm-project/build4/include ")
+add_definitions(-D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -I./ -lLLVMSupport)
 
 
 
@@ -67,12 +60,6 @@ list(APPEND SOURCE_FILES parser.cc scanner.cc)
 
 # Add source files
 add_executable(helen-frontend++ ${SOURCE_FILES})
-
-# Link with LLVM libraries (if needed - usually not necessary with explicit compiler/linker)
-# If you get linker errors, uncomment these and adjust paths if necessary.
-#set(LLVM_LIBRARY_DIRS "/home/user/llvmbuild/lib") # Adjust if your libraries are elsewhere
-#link_directories(${LLVM_LIBRARY_DIRS})
-#target_link_libraries(helen-frontend++ -lLLVMSupport) # Or other necessary LLVM libs
 
 # Ensure the executable depends on the file copying
 add_dependencies(helen-frontend++ copy_files)
