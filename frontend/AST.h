@@ -1,13 +1,12 @@
 #ifndef AST_H
 #define AST_H
 
-//#include "llvm/ADT/SmallVector.h"
-//#include "llvm/ADT/StringRef.h"
+// #include "llvm/ADT/SmallVector.h"
+// #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-
 
 #include <string.h>
 #include <stdio.h>
@@ -38,10 +37,8 @@ static std::map<std::string, llvm::Value *> NamedValues;
 //   return nullptr;
 // }
 
-
 /* Global configuration's variables*/
 extern std::vector<Error> errorList;
-
 
 enum TYPES
 {
@@ -79,7 +76,7 @@ public:
 
 class ASTNode
 {
-public:    
+public:
     virtual ~ASTNode() = default;
     virtual llvm::Value *codegen() = 0;
 };
@@ -87,21 +84,18 @@ public:
 class Expression : public ASTNode
 {
 public:
-
-    virtual ~Expression() = default;    
-    llvm::Value* codegen() override = 0;
-    virtual void print(){ }
+    virtual ~Expression() = default;
+    llvm::Value *codegen() override = 0;
+    virtual void print() {}
 };
 
 class Instruction : public ASTNode
 {
-public:    
+public:
     virtual ~Instruction() = default;
     llvm::Value *codegen() override = 0;
-    virtual void print() { }
+    virtual void print() {}
 };
-
-
 
 // Specific classes
 class ArrayLevel
@@ -114,12 +108,12 @@ public:
 
     bool addLevel(std::unique_ptr<Expression> expression)
     {
-        if(expression)
+        if (expression)
         {
             levels.push_back(std::move(expression));
             return true;
-        }        
-        return false;        
+        }
+        return false;
     }
 
     bool addLevel(std::unique_ptr<ArrayLevel> arraylevel)
@@ -138,8 +132,11 @@ class StringExp : public Expression
 
 public:
     StringExp(int line, int column, const std::string &value) : line(line), column(column), value(value) {}
-    
-    llvm::Value *codegen() override;
+
+    llvm::Value *codegen() override
+    {
+        return llvm::ConstantDataArray::getString(*TheContext, value, true);
+    }
 };
 
 class IntExp : public Expression
@@ -149,9 +146,10 @@ class IntExp : public Expression
 
 public:
     IntExp(int line, int column, int value) : line(line), column(column), value(value) {}
-    
-    llvm::Value *codegen() override{
-        return nullptr;
+
+    llvm::Value *codegen() override
+    {
+        return llvm::ConstantInt::get(*TheContext, llvm::APInt(32,value));
     }
 };
 
@@ -163,7 +161,8 @@ class DoubleExp : public Expression
 public:
     DoubleExp(int line, int column, double value) : line(line), column(column), value(value) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
     }
 };
@@ -175,7 +174,10 @@ class FloatExp : public Expression
 
 public:
     FloatExp(int line, int column, float value) : line(line), column(column), value(value) {}
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override
+    {
+        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
+    }
 };
 
 class BooleanExp : public Expression
@@ -212,7 +214,8 @@ public:
         return this->name;
     }
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -224,13 +227,14 @@ class AddExp : public Expression
 
 public:
     AddExp(int line, int column,
-                std::unique_ptr<Expression> left_expression,
-                std::unique_ptr<Expression> right_expression) 
-                : line(line), column(column),
-                left_expression(std::move(left_expression)),
-                right_expression(std::move(right_expression)) {}
+           std::unique_ptr<Expression> left_expression,
+           std::unique_ptr<Expression> right_expression)
+        : line(line), column(column),
+          left_expression(std::move(left_expression)),
+          right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -242,12 +246,13 @@ class SubExp : public Expression
 
 public:
     SubExp(int line, int column,
-                        std::unique_ptr<Expression> left_expression,
-                        std::unique_ptr<Expression> right_expression) : line(line), column(column),
-                        left_expression(std::move(left_expression)),
-                        right_expression(std::move(right_expression)) {}
-    
-    llvm::Value *codegen() override{
+           std::unique_ptr<Expression> left_expression,
+           std::unique_ptr<Expression> right_expression) : line(line), column(column),
+                                                           left_expression(std::move(left_expression)),
+                                                           right_expression(std::move(right_expression)) {}
+
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -259,13 +264,14 @@ class MulExp : public Expression
 
 public:
     MulExp(int line, int column,
-                             std::unique_ptr<Expression> left_expression,
-                             std::unique_ptr<Expression> right_expression) 
-                             : line(line), column(column),
-                                left_expression(std::move(left_expression)),
-                                right_expression(std::move(right_expression)) {}
+           std::unique_ptr<Expression> left_expression,
+           std::unique_ptr<Expression> right_expression)
+        : line(line), column(column),
+          left_expression(std::move(left_expression)),
+          right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -277,28 +283,29 @@ class DivExp : public Expression
 
 public:
     DivExp(int line, int column,
-                       std::unique_ptr<Expression> left_expression,
-                       std::unique_ptr<Expression> right_expression) 
-                       : line(line), column(column), 
-                        left_expression(std::move(left_expression)), 
-                        right_expression(std::move(right_expression)) {}
+           std::unique_ptr<Expression> left_expression,
+           std::unique_ptr<Expression> right_expression)
+        : line(line), column(column),
+          left_expression(std::move(left_expression)),
+          right_expression(std::move(right_expression)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
 
 class CallExpression : public Expression
 {
-    std::string id;    
+    std::string id;
     std::vector<std::unique_ptr<Expression>> actual_parameters;
     int line, column;
 
 public:
-    CallExpression(int line, int column, 
-                   const std::string &id,std::vector<std::unique_ptr<Expression>> args) 
-                   : line(line), column(column), id(id), 
-                   actual_parameters(std::move(args)) {}
+    CallExpression(int line, int column,
+                   const std::string &id, std::vector<std::unique_ptr<Expression>> args)
+        : line(line), column(column), id(id),
+          actual_parameters(std::move(args)) {}
 
     llvm::Value *codegen() override;
 };
@@ -324,7 +331,7 @@ class Type
 
 public:
     Type(TYPE type) : type(type) {}
-    Type(TYPE type, const std::string name): type(type), name(name){}
+    Type(TYPE type, const std::string name) : type(type), name(name) {}
 };
 /*************/
 
@@ -333,16 +340,17 @@ class Parameter : public Instruction
     std::string name;
     std::unique_ptr<Type> type;
     int line, column;
-    std::optional<std::unique_ptr<ArrayLevel>> levels; 
+    std::optional<std::unique_ptr<ArrayLevel>> levels;
 
 public:
-    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name) 
+    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name)
         : line(line), column(column), type(std::move(type)), name(name) {}
 
-    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name, std::unique_ptr<ArrayLevel> arraylevel) 
+    Parameter(int line, int column, std::unique_ptr<Type> type, std::string &name, std::unique_ptr<ArrayLevel> arraylevel)
         : line(line), column(column), type(std::move(type)), name(name), levels(std::move(arraylevel)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -353,18 +361,19 @@ class FormalParameters : public Instruction
     std::list<std::unique_ptr<Parameter>> parameters;
 
 public:
-    FormalParameters(){}
+    FormalParameters() {}
 
-    FormalParameters(std::list<std::unique_ptr<Parameter>> parameters): parameters(std::move(parameters)){}
+    FormalParameters(std::list<std::unique_ptr<Parameter>> parameters) : parameters(std::move(parameters)) {}
 
-    //[[deprecated("Ya no es compatible, o quizá si :v")]] 
+    //[[deprecated("Ya no es compatible, o quizá si :v")]]
     bool addParameter(std::unique_ptr<Parameter> parameter)
     {
         this->parameters.push_back(std::move(parameter));
         return true;
     }
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -375,7 +384,7 @@ class Block : public Instruction
     std::list<std::unique_ptr<Instruction>> instructions;
 
 public:
-    Block(int line, int column, std::list<std::unique_ptr<Instruction>> instructions) 
+    Block(int line, int column, std::list<std::unique_ptr<Instruction>> instructions)
         : line(line), column(column), instructions(std::move(instructions)) {}
 
     Block(int line, int column) : line(line), column(column) {}
@@ -386,31 +395,31 @@ public:
         return true;
     }
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
 
-
 class FunctionInst : public Instruction
 {
     std::string name;
-    //std::vector<std::unique_ptr<Parameter>> formalParameters;
+    // std::vector<std::unique_ptr<Parameter>> formalParameters;
     std::unique_ptr<FormalParameters> formalParameters;
     std::unique_ptr<Block> body;
     int line, column;
 
 public:
     FunctionInst(int line, int column, const std::string &name,
-                 std::unique_ptr<FormalParameters> formalParameters, std::unique_ptr<Block> body) 
-                 : line(line), column(column), name(name), 
-                    formalParameters(std::move(formalParameters)), body(std::move(body)) {}
+                 std::unique_ptr<FormalParameters> formalParameters, std::unique_ptr<Block> body)
+        : line(line), column(column), name(name),
+          formalParameters(std::move(formalParameters)), body(std::move(body)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
-
 
 class Program : public Instruction
 {
@@ -419,11 +428,12 @@ class Program : public Instruction
 
 public:
     Program(std::unique_ptr<Block> imports,
-            std::unique_ptr<Block> globals) 
-            : imports(std::move(imports)), 
-            globals(std::move(globals)) {}    
+            std::unique_ptr<Block> globals)
+        : imports(std::move(imports)),
+          globals(std::move(globals)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
@@ -447,8 +457,8 @@ class Constant : public Instruction
     std::unique_ptr<Expression> value;
 
 public:
-    Constant(int line, int column,const std::string &name, std::unique_ptr<Expression> value) 
-    : line(line), column(column), name(name), value(std::move(value)) {}
+    Constant(int line, int column, const std::string &name, std::unique_ptr<Expression> value)
+        : line(line), column(column), name(name), value(std::move(value)) {}
 
     llvm::Value *codegen() override;
 };
@@ -463,10 +473,10 @@ class Function : public Instruction
     Type *type;
 
 public:
-    Function(int line, int column, Type *type, const std::string &name, 
-    std::unique_ptr<FormalParameters> parameters, std::unique_ptr<Block> block) 
-    : line(line), column(column), type(type), name(name), 
-      formal_parameters(std::move(parameters)), block(std::move(block)) {}
+    Function(int line, int column, Type *type, const std::string &name,
+             std::unique_ptr<FormalParameters> parameters, std::unique_ptr<Block> block)
+        : line(line), column(column), type(type), name(name),
+          formal_parameters(std::move(parameters)), block(std::move(block)) {}
 
     llvm::Value *codegen() override;
 };
@@ -479,11 +489,11 @@ class Declaration : public Instruction
     Type type;
 
 public:
-    Declaration(int line, int column, Type *type, std::list<std::string> ids, std::unique_ptr<Expression> value) 
-    : line(line), column(column), ids(std::move(ids)), 
-        value(std::move(value)), type(*type) {}
+    Declaration(int line, int column, Type *type, std::list<std::string> ids, std::unique_ptr<Expression> value)
+        : line(line), column(column), ids(std::move(ids)),
+          value(std::move(value)), type(*type) {}
 
-    Declaration(int line, int column, Type *type, std::list<std::string> ids) 
+    Declaration(int line, int column, Type *type, std::list<std::string> ids)
         : line(line), column(column), ids(std::move(ids)), type(*type) {}
 
     llvm::Value *codegen() override;
@@ -502,7 +512,7 @@ public:
     {
         this->ids.push_back(id);
         return true;
-    }    
+    }
 
     llvm::Value *codegen() override;
 };
@@ -514,13 +524,13 @@ class Assignation : public Instruction
     std::unique_ptr<Expression> expression;
 
 public:
-    Assignation(int line, int column, const std::string &name, 
-        std::unique_ptr<Expression> expression) 
+    Assignation(int line, int column, const std::string &name,
+                std::unique_ptr<Expression> expression)
         : line(line), column(column), name(name), expression(std::move(expression)) {}
 
-
-    llvm::Value *codegen() override{
-            return nullptr; // Placeholder
+    llvm::Value *codegen() override
+    {
+        return nullptr; // Placeholder
     }
 };
 
@@ -528,15 +538,15 @@ class For : public Instruction
 {
     int line, column;
     std::unique_ptr<Instruction> declAssig;
-    std::unique_ptr<Expression> condition;    
+    std::unique_ptr<Expression> condition;
     std::unique_ptr<Expression> update;
     std::unique_ptr<Block> block;
 
 public:
-    For(int line, int column, std::unique_ptr<Instruction> decl, 
-        std::unique_ptr<Expression> cond, std::unique_ptr<Expression> update, std::unique_ptr<Block> block) 
-        : line(line), column(column), declAssig(std::move(decl)), condition(std::move(cond)), 
-            update(std::move(update)), block(std::move(block)) {}
+    For(int line, int column, std::unique_ptr<Instruction> decl,
+        std::unique_ptr<Expression> cond, std::unique_ptr<Expression> update, std::unique_ptr<Block> block)
+        : line(line), column(column), declAssig(std::move(decl)), condition(std::move(cond)),
+          update(std::move(update)), block(std::move(block)) {}
 
     llvm::Value *codegen() override;
 };
@@ -548,7 +558,7 @@ class DoWhile : public Instruction
     std::unique_ptr<Block> block;
 
 public:
-    DoWhile(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block) 
+    DoWhile(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
     llvm::Value *codegen() override;
@@ -561,7 +571,7 @@ class While : public Instruction
     std::unique_ptr<Block> block;
 
 public:
-    While(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block) 
+    While(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
     llvm::Value *codegen() override;
@@ -575,25 +585,27 @@ class IfInst : public Instruction
     std::unique_ptr<Block> block;
 
 public:
-    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block) 
-    : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
+    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
+        : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf) 
-    : line(line), column(column), 
-        condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
+    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf)
+        : line(line), column(column),
+          condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
 
     llvm::Value *codegen() override;
 };
 
-class ReturnInst: public Instruction{
+class ReturnInst : public Instruction
+{
     int line, column;
     std::unique_ptr<Expression> exp;
 
-    public:
-        ReturnInst(int line, int column, std::unique_ptr<Expression> exp)
-            : line(line), column(column), exp(std::move(exp)){}
+public:
+    ReturnInst(int line, int column, std::unique_ptr<Expression> exp)
+        : line(line), column(column), exp(std::move(exp)) {}
 
-    llvm::Value *codegen() override{
+    llvm::Value *codegen() override
+    {
         return nullptr;
     }
 };
