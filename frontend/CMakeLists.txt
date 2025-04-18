@@ -13,7 +13,8 @@ message(STATUS "Using LLD: ${CMAKE_LINKER}")
 # Set compiler flags
 set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funwind-tables -frtti -lLLVMSupport -L/home/erick/llvm-project/build4/lib")
-set(CMAKE_CXX_FLAGS " -L/home/erick/llvm-project/build4/lib -I/home/erick/llvm-project/llvm/include -I/home/erick/llvm-project/build4/include ")
+#/home/erick/llvm-project/llvm/include/llvm/IR/
+set(CMAKE_CXX_FLAGS " -L/home/erick/llvm-project/build4/lib -I/home/erick/llvm-project/llvm/include -I/home/erick/llvm-project/build4/include -I/home/erick/llvm-project/llvm/include/llvm/IR/")
 add_definitions(-D_GNU_SOURCE -D_DEBUG -D_GLIBCXX_ASSERTIONS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -I./ -lLLVMSupport)
 
 
@@ -66,3 +67,12 @@ add_dependencies(helen-frontend++ copy_files)
 
 # Set the linker explicitly for the target (more robust)
 set_target_properties(helen-frontend++ PROPERTIES LINKER_LANGUAGE CXX) # Important for LLD to be used correctly
+
+# Find LLVM and link against it 
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_INCLUDE_DIRS})
+target_link_libraries(helen-frontend++ PRIVATE ${LLVM_LIBRARIES})
+
+
+#export CMAKE_PREFIX_PATH=/home/erick/llvm-project/build4
+#/home/erick/llvm-project/llvm/include/llvm/IR/Intrinsics.h

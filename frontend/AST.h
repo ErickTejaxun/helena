@@ -135,9 +135,11 @@ public:
 
     llvm::Value *codegen() override
     {
+        // True due the close char is like C
         return llvm::ConstantDataArray::getString(*TheContext, value, true);
     }
 };
+
 
 class IntExp : public Expression
 {

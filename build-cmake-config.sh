@@ -37,6 +37,11 @@ cmake -G Ninja ../llvm \
         -DLLVM_USE_NEWPM=ON # env CC=`which clang` CXX=`which clang++` Hay que establecer primero las variables de entorno
 
 
+
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 180
+sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 180
+
+CC=clang-18
 cmake -G Ninja ../llvm \
         -DLLVM_PARALLEL_COMPILE_JOBS=7 \
         -DLLVM_PARALLEL_LINK_JOBS=1 \
@@ -48,6 +53,28 @@ cmake -G Ninja ../llvm \
         -DLLVM_CCACHE_BUILD=OFF \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+        -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly;openmp;pstl;flang;libc;libclc' \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DLLVM_USE_LINKER=gold;lld \
+        -DBUILD_SHARED_LIBS=ON \
+        -DLLVM_USE_SPLIT_DWARF=ON \
+        -DLLVM_OPTIMIZED_TABLEGEN=ON \
+        -DLLVM_USE_NEWPM=ON \
+        -DLLVM_ENABLE_ABI_BREAKING_CHECKS=ON \
+        -DLIBOMP_OMPD_SUPPORT=OFF
+
+
+cmake -G Ninja ../llvm \
+        -DLLVM_PARALLEL_COMPILE_JOBS=7 \
+        -DLLVM_PARALLEL_LINK_JOBS=1 \
+        -DLLVM_BUILD_EXAMPLES=ON \
+        -DLLVM_TARGETS_TO_BUILD="X86" \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DLLVM_ENABLE_ASSERTIONS=ON \
+        -DLLVM_CCACHE_BUILD=OFF \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
         -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly' \
         -DCMAKE_C_COMPILER=clang \
         -DCMAKE_CXX_COMPILER=clang++ \
@@ -55,9 +82,11 @@ cmake -G Ninja ../llvm \
         -DBUILD_SHARED_LIBS=ON \
         -DLLVM_USE_SPLIT_DWARF=ON \
         -DLLVM_OPTIMIZED_TABLEGEN=ON \
-        -DLLVM_USE_NEWPM=ON         
+        -DLLVM_USE_NEWPM=ON \
+        -DLLVM_ENABLE_ABI_BREAKING_CHECKS=ON 
 
 
+-DLIBOMP_OMPD_SUPPORT=OFF error con python 3.12
 
 cmake -G Ninja ../llvm  -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly' -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
@@ -86,3 +115,16 @@ ninja -j8 all
   cmake --build . --target check-mlir
 
   cmake -DCMAKE_INSTALL_PREFIX=/your/target/location -P cmake_install.cmake
+
+
+
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 180
+
+/usr/local/bin/ld.lld
+
+sudo update-alternatives --install /usr/local/bin/ld.lld ld.lld /home/erick/llvm-project/build3/bin/ld.lld 180
+sudo update-alternatives --install /usr/local/bin/ld.bfd ld.bfd /home/erick/llvm-project/build3/bin/ld.bfd 180
+sudo update-alternatives --install /usr/local/bin/ld.gold ld.gold /home/erick/llvm-project/build3/bin/ld.gold 180
+sudo update-alternatives --install /usr/local/bin/ld.so ld.so /home/erick/llvm-project/build3/bin/ld.so 180
+
+ld.bfd     ld.gold    ld.lld     ld.lld-14  ld.lld-18  ld.so
