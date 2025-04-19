@@ -34,8 +34,10 @@ int driver::parse (const std::string &f)
   parse.set_debug_level (trace_parsing);
   int res = parse ();
   scan_end ();
-
+    
   std::cout<<"Starting AST traversal." << std::endl;
+  root->codegen();
+  std::cout<<"Ending AST traversal." << std::endl;
   
 
   return res;

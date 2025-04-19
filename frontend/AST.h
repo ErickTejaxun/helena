@@ -18,6 +18,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <typeinfo> // Debug
 
 class Error;
 class ASTNode;
@@ -382,10 +383,11 @@ public:
 
 class Block : public Instruction
 {
-    int line, column;
-    std::list<std::unique_ptr<Instruction>> instructions;
+    int line, column;    
 
 public:
+    std::list<std::unique_ptr<Instruction>> instructions;
+
     Block(int line, int column, std::list<std::unique_ptr<Instruction>> instructions)
         : line(line), column(column), instructions(std::move(instructions)) {}
 
@@ -399,7 +401,10 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        for(const auto& ptr : instructions){            
+            std::cout << typeid(ptr.get()).name() << std::endl;
+            //ptr.get()->codegen();
+        }      
     }
 };
 
@@ -436,7 +441,16 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        imports->codegen();
+        globals->codegen();
+
+        // for(const auto& ptr : imports.get()->instructions){
+        //     ptr->codegen();
+        // }
+
+        // for(const auto& ptr : globals.get()->instructions){
+        //     ptr->codegen();
+        // }        
     }
 };
 
@@ -486,8 +500,10 @@ public:
 class Declaration : public Instruction
 {
     int line, column;
-    std::optional<std::list<std::string>> ids;
-    std::optional<std::unique_ptr<Expression>> value;
+    //std::optional<std::list<std::string>> ids;
+    //std::optional<std::unique_ptr<Expression>> value;
+    std::list<std::string> ids;
+    std::unique_ptr<Expression> value;
     std::unique_ptr<Type> type;
 
 public:
@@ -496,8 +512,8 @@ public:
           value(std::move(value)), type(std::move(type)) {}
    
     Declaration(int line, int column, std::unique_ptr<Type> type, const std::string &id , std::unique_ptr<Expression> value)
-          : line(line), column(column),value(std::move(value)), type(std::move(type)) {
-            ids->push_front(id);
+          : line(line), column(column),value(std::move(value)), type(std::move(type)) {            
+            ids.push_front(id);
           }
 
     Declaration(int line, int column, std::unique_ptr<Type> type, std::list<std::string> ids)
@@ -505,6 +521,7 @@ public:
 
     llvm::Value *codegen() override
     {
+        std::cout<< "Declaration Node" << std::endl;
         return nullptr; // Placeholder
     }
 };
@@ -540,6 +557,7 @@ public:
 
     llvm::Value *codegen() override
     {
+        std::cout<< "Assignation Node" << std::endl;
         return nullptr; // Placeholder
     }
 };
