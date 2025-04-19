@@ -82,8 +82,9 @@
 %nterm <std::unique_ptr<FormalParameters>> fparameters
 %nterm <std::unique_ptr<Block>> blockf
 %nterm <std::unique_ptr<Block>> linstructionf
-%nterm <std::unique_ptr<Instruction>> returni
+%nterm <std::unique_ptr<Instruction>> returni 
 %nterm <std::unique_ptr<Instruction>> instructionf
+%nterm <std::unique_ptr<Instruction>> declaration
 
 
 %printer { yyo << "Error---"; } <*>;
@@ -124,6 +125,11 @@ linstructionf:
 instructionf:
   instruction {$$=std::move($1);}
 | returni { $$ = std::move($1);}
+| declaration { $$ = std::move($1);}
+;
+
+declaration: 
+  type "identifier" "=" exp ";"  { $$=std::make_unique<Declaration>(0,0,std::move($1), $2,std::move($4));}
 ;
 
 returni:

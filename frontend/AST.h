@@ -488,17 +488,25 @@ class Declaration : public Instruction
     int line, column;
     std::optional<std::list<std::string>> ids;
     std::optional<std::unique_ptr<Expression>> value;
-    Type type;
+    std::unique_ptr<Type> type;
 
 public:
-    Declaration(int line, int column, Type *type, std::list<std::string> ids, std::unique_ptr<Expression> value)
+    Declaration(int line, int column, std::unique_ptr<Type> type, std::list<std::string> ids, std::unique_ptr<Expression> value)
         : line(line), column(column), ids(std::move(ids)),
-          value(std::move(value)), type(*type) {}
+          value(std::move(value)), type(std::move(type)) {}
+   
+    Declaration(int line, int column, std::unique_ptr<Type> type, const std::string &id , std::unique_ptr<Expression> value)
+          : line(line), column(column),value(std::move(value)), type(std::move(type)) {
+            ids->push_front(id);
+          }
 
-    Declaration(int line, int column, Type *type, std::list<std::string> ids)
-        : line(line), column(column), ids(std::move(ids)), type(*type) {}
+    Declaration(int line, int column, std::unique_ptr<Type> type, std::list<std::string> ids)
+        : line(line), column(column), ids(std::move(ids)), type(std::move(type)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override
+    {
+        return nullptr; // Placeholder
+    }
 };
 
 class idList : public Instruction

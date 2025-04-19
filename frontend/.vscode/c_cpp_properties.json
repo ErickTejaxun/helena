@@ -7,7 +7,7 @@
                 "/home/erick/llvm-project/llvm/include/llvm",
                 "/home/erick/llvm-project/llvm/include/llvm-c",
                 "/home/erick/llvm-project/llvm/include",
-                "/home/erick/llvm-project/build/include"
+                "/home/erick/llvm-project/build3/include"
             ],
             "defines": [],
             "compilerPath": "/home/erick/llvm-project/build/bin/clang++",
