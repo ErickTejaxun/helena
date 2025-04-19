@@ -93,7 +93,12 @@
 %start program;
 
 program:
-  linstructions { drv.root = std::make_unique<Program>(std::move($1), std::move($1));}
+  linstructions { 
+      std::cout << "Raiz" << std::endl;      
+      std::cout << $1.get()->instructions.size() << std::endl;
+      drv.root = std::make_unique<Program>(std::move($1), std::move($1));
+      //$1->codegen();      
+      }
 ;
 
 //block: "{" linstructions "}" {$$ = std::move($2);}

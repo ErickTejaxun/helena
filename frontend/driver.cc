@@ -36,7 +36,11 @@ int driver::parse (const std::string &f)
   scan_end ();
     
   std::cout<<"Starting AST traversal." << std::endl;
-  root->codegen();
+  if(!root){
+    root->codegen();
+  }else{
+    std::cout<<"There is no AST to interpretate." << std::endl;
+  }
   std::cout<<"Ending AST traversal." << std::endl;
   
 

@@ -395,6 +395,7 @@ public:
 
     bool addInstruction(std::unique_ptr<Instruction> instruction)
     {
+        std::cout<<instructions.size() << std::endl;
         instructions.push_back(std::move(instruction));
         return true;
     }
