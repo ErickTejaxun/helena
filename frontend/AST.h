@@ -28,7 +28,6 @@
 #include <optional>
 #include <typeinfo> // Debug
 
-
 class Error;
 class ASTNode;
 
@@ -47,18 +46,17 @@ static std::map<std::string, llvm::Value *> NamedValues;
 //   return nullptr;
 // }
 
-
-static void InitializeModule() {
+static void InitializeModule()
+{
     // Open a new context and module.
     TheContext = std::make_unique<llvm::LLVMContext>();
     TheModule = std::make_unique<llvm::Module>("Helena", *TheContext);
-  
+
     // Create a new builder for the module.
     Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
-    std::cout<<"Module initialized" << std::endl;
+    std::cout << "Module initialized" << std::endl;
 }
-
 
 /* Global configuration's variables*/
 extern std::vector<Error> errorList;
@@ -163,7 +161,6 @@ public:
     }
 };
 
-
 class IntExp : public Expression
 {
     int value;
@@ -174,7 +171,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return llvm::ConstantInt::get(*TheContext, llvm::APInt(32,value));
+        return llvm::ConstantInt::get(*TheContext, llvm::APInt(32, value));
     }
 };
 
@@ -405,7 +402,7 @@ public:
 
 class Block : public Instruction
 {
-    int line, column;    
+    int line, column;
 
 public:
     std::list<std::unique_ptr<Instruction>> instructions;
@@ -417,21 +414,23 @@ public:
 
     bool addInstruction(std::unique_ptr<Instruction> instruction)
     {
-        //std::cout<<instructions.size() << std::endl;
+        std::cout << instructions.size() << std::endl;
         instructions.push_back(std::move(instruction));
         return true;
     }
 
     llvm::Value *codegen() override
     {
-        std::cout<< "AST Node: "<< typeid(this).name() <<  std::endl;
-        std::cout<< "There are " << instructions.size() << " instructions."<<std::endl;
-        for(const auto& ptr : instructions){            
+        std::cout << "AST Node: " << typeid(this).name() << std::endl;
+
+        std::size_t numberOfInstructions = instructions.size();
+        std::cout << "There are " << numberOfInstructions << " instructions." << std::endl;
+        for (const auto &ptr : instructions)
+        {
             std::cout << typeid(ptr.get()).name() << std::endl;
             ptr.get()->codegen();
-        }     
-        std::cout<< "After run." <<  std::endl;
-        //return llvm::ConstantFP::get(*TheContext, llvm::APFloat(100.00));
+        }
+        // return llvm::ConstantFP::get(*TheContext, llvm::APFloat(100.00));
         return nullptr;
     }
 };
@@ -452,6 +451,20 @@ public:
 
     llvm::Value *codegen() override
     {
+        if (!body.get())
+        {
+            std::cerr << "There is no instructions for this program." << std::endl;
+            return nullptr;
+        }
+        body.get()->codegen();
+
+        /*
+        if(!TheContext){
+            std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
+            InitializeModule();
+        }
+        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
+        */
         return nullptr;
     }
 };
@@ -467,13 +480,14 @@ public:
         : imports(std::move(imports)),
           globals(std::move(globals)) {}
 
-    Program(std::unique_ptr<Block> globals):        
-          globals(std::move(globals)) {}
-    
-    llvm::Value *codegen() override{
-        
-        if(!globals.get()){
-            std::cerr << "There is no instructions for this program."<<std::endl;
+    Program(std::unique_ptr<Block> globals) : globals(std::move(globals)) {}
+
+    llvm::Value *codegen() override
+    {
+
+        if (!globals.get())
+        {
+            std::cerr << "There is no instructions for this program." << std::endl;
             return nullptr;
         }
         globals.get()->codegen();
@@ -482,13 +496,12 @@ public:
         if(!TheContext){
             std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
             InitializeModule();
-        }           
+        }
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
         */
-       return nullptr;
-    } 
+        return nullptr;
+    }
 };
-
 
 class Import : public Instruction
 {
@@ -530,14 +543,31 @@ public:
         : line(line), column(column), type(type), name(name),
           formal_parameters(std::move(parameters)), block(std::move(block)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override
+    {
+        if (!block.get())
+        {
+            std::cerr << "There is no instructions for this program." << std::endl;
+            return nullptr;
+        }
+        block.get()->codegen();
+
+        /*
+        if(!TheContext){
+            std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
+            InitializeModule();
+        }
+        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
+        */
+        return nullptr;
+    }
 };
 
 class Declaration : public Instruction
 {
     int line, column;
-    //std::optional<std::list<std::string>> ids;
-    //std::optional<std::unique_ptr<Expression>> value;
+    // std::optional<std::list<std::string>> ids;
+    // std::optional<std::unique_ptr<Expression>> value;
     std::list<std::string> ids;
     std::unique_ptr<Expression> value;
     std::unique_ptr<Type> type;
@@ -546,18 +576,19 @@ public:
     Declaration(int line, int column, std::unique_ptr<Type> type, std::list<std::string> ids, std::unique_ptr<Expression> value)
         : line(line), column(column), ids(std::move(ids)),
           value(std::move(value)), type(std::move(type)) {}
-   
-    Declaration(int line, int column, std::unique_ptr<Type> type, const std::string &id , std::unique_ptr<Expression> value)
-          : line(line), column(column),value(std::move(value)), type(std::move(type)) {            
-            ids.push_front(id);
-          }
+
+    Declaration(int line, int column, std::unique_ptr<Type> type, const std::string &id, std::unique_ptr<Expression> value)
+        : line(line), column(column), value(std::move(value)), type(std::move(type))
+    {
+        ids.push_front(id);
+    }
 
     Declaration(int line, int column, std::unique_ptr<Type> type, std::list<std::string> ids)
         : line(line), column(column), ids(std::move(ids)), type(std::move(type)) {}
 
     llvm::Value *codegen() override
     {
-        std::cout<< "Declaration Node" << std::endl;
+        std::cout << "Declaration Node" << std::endl;
         return nullptr; // Placeholder
     }
 };
@@ -593,7 +624,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        std::cout<< "Assignation Node" << std::endl;
+        std::cout << "Assignation Node" << std::endl;
         return nullptr; // Placeholder
     }
 };
@@ -673,6 +704,5 @@ public:
         return nullptr;
     }
 };
-
 
 #endif
