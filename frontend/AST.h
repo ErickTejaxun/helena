@@ -4,9 +4,17 @@
 // #include "llvm/ADT/SmallVector.h"
 // #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Value.h"
+#include "llvm/IR/Module.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -19,6 +27,7 @@
 #include <memory>
 #include <optional>
 #include <typeinfo> // Debug
+
 
 class Error;
 class ASTNode;
@@ -37,6 +46,19 @@ static std::map<std::string, llvm::Value *> NamedValues;
 //   LogError(Str);
 //   return nullptr;
 // }
+
+
+static void InitializeModule() {
+    // Open a new context and module.
+    TheContext = std::make_unique<llvm::LLVMContext>();
+    TheModule = std::make_unique<llvm::Module>("Helena", *TheContext);
+  
+    // Create a new builder for the module.
+    Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+
+    std::cout<<"Module initialized" << std::endl;
+}
+
 
 /* Global configuration's variables*/
 extern std::vector<Error> errorList;
@@ -395,17 +417,22 @@ public:
 
     bool addInstruction(std::unique_ptr<Instruction> instruction)
     {
-        std::cout<<instructions.size() << std::endl;
+        //std::cout<<instructions.size() << std::endl;
         instructions.push_back(std::move(instruction));
         return true;
     }
 
     llvm::Value *codegen() override
     {
+        std::cout<< "AST Node: "<< typeid(this).name() <<  std::endl;
+        std::cout<< "There are " << instructions.size() << " instructions."<<std::endl;
         for(const auto& ptr : instructions){            
             std::cout << typeid(ptr.get()).name() << std::endl;
-            //ptr.get()->codegen();
-        }      
+            ptr.get()->codegen();
+        }     
+        std::cout<< "After run." <<  std::endl;
+        //return llvm::ConstantFP::get(*TheContext, llvm::APFloat(100.00));
+        return nullptr;
     }
 };
 
@@ -440,20 +467,28 @@ public:
         : imports(std::move(imports)),
           globals(std::move(globals)) {}
 
-    llvm::Value *codegen() override
-    {
-        imports->codegen();
-        globals->codegen();
+    Program(std::unique_ptr<Block> globals):        
+          globals(std::move(globals)) {}
+    
+    llvm::Value *codegen() override{
+        
+        if(!globals.get()){
+            std::cerr << "There is no instructions for this program."<<std::endl;
+            return nullptr;
+        }
+        globals.get()->codegen();
 
-        // for(const auto& ptr : imports.get()->instructions){
-        //     ptr->codegen();
-        // }
-
-        // for(const auto& ptr : globals.get()->instructions){
-        //     ptr->codegen();
-        // }        
-    }
+        /*
+        if(!TheContext){
+            std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
+            InitializeModule();
+        }           
+        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
+        */
+       return nullptr;
+    } 
 };
+
 
 class Import : public Instruction
 {
@@ -638,5 +673,6 @@ public:
         return nullptr;
     }
 };
+
 
 #endif
