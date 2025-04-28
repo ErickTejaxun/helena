@@ -15,6 +15,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/Type.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -55,7 +56,7 @@ static void InitializeModule()
     // Create a new builder for the module.
     Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
-    std::cout << "Module initialized" << std::endl;
+    std::cout << "Module initialized" << std::endl;    
 }
 
 /* Global configuration's variables*/
@@ -414,7 +415,7 @@ public:
 
     bool addInstruction(std::unique_ptr<Instruction> instruction)
     {
-        std::cout << instructions.size() << std::endl;
+        //std::cout << instructions.size() << std::endl;
         instructions.push_back(std::move(instruction));
         return true;
     }
@@ -424,7 +425,7 @@ public:
         std::cout << "AST Node: " << typeid(this).name() << std::endl;
 
         std::size_t numberOfInstructions = instructions.size();
-        std::cout << "There are " << numberOfInstructions << " instructions." << std::endl;
+        //std::cout << "There are " << numberOfInstructions << " instructions." << std::endl;
         for (const auto &ptr : instructions)
         {
             std::cout << typeid(ptr.get()).name() << std::endl;
@@ -451,20 +452,28 @@ public:
 
     llvm::Value *codegen() override
     {
-        if (!body.get())
-        {
-            std::cerr << "There is no instructions for this program." << std::endl;
+        if(TheContext==NULL){
+            std::cout<<"Contexto is not initialized"<<std::endl;
             return nullptr;
         }
-        body.get()->codegen();
+        std::vector<llvm::Type *> Doubles(1, llvm::Type::getDoubleTy(*TheContext));
+        // llvm::FunctionType *FT = 
+        //     llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
 
-        /*
-        if(!TheContext){
-            std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
-            InitializeModule();
-        }
-        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
-        */
+        // llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, name, TheModule.get());
+
+        // unsigned Idx = 0;
+        // for(auto &Arg : F->args()){
+        //     Arg.setName("BB");
+        // }
+
+        // return F;
+        // if (!body.get())
+        // {
+        //     std::cerr << "There is no instructions for this program." << std::endl;
+        //     return nullptr;
+        // }
+        // body.get()->codegen();        
         return nullptr;
     }
 };
@@ -484,7 +493,7 @@ public:
 
     llvm::Value *codegen() override
     {
-
+        InitializeModule();
         if (!globals.get())
         {
             std::cerr << "There is no instructions for this program." << std::endl;
