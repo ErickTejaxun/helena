@@ -5,6 +5,3 @@ int main(){
     int c = 10;
 }
 
-int math(){
-    int c = 100;
-}

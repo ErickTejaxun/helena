@@ -355,6 +355,19 @@ class Type
 public:
     Type(TYPE type) : type(type) {}
     Type(TYPE type, const std::string name) : type(type), name(name) {}
+
+    llvm::Type *generateLLVMType(llvm::LLVMContext &context){
+        switch(type){
+            case TINT:
+                return llvm::Type::getInt32Ty(context);
+            case TDOUBLE:
+                return llvm::Type::getDoubleTy(context);
+            case TSTRING:
+                return llvm::Type::getInt8Ty(context);
+            case TBOOL:
+                return llvm::Type::getInt1Ty(context);
+        }
+    }
 };
 /*************/
 
@@ -376,14 +389,18 @@ public:
     {
         return nullptr;
     }
+
+    std::unique_ptr<Type> getType(){ return type;}
+
 };
 
 class FormalParameters : public Instruction
 {
-    // Type type;
-    std::list<std::unique_ptr<Parameter>> parameters;
+    
 
 public:
+    // Type type;    
+    std::list<std::unique_ptr<Parameter>> parameters;
     FormalParameters() {}
 
     FormalParameters(std::list<std::unique_ptr<Parameter>> parameters) : parameters(std::move(parameters)) {}
@@ -398,6 +415,10 @@ public:
     llvm::Value *codegen() override
     {
         return nullptr;
+    }
+
+    int getParamsNumber(){
+        return parameters.size();
     }
 };
 
@@ -451,30 +472,59 @@ public:
           formalParameters(std::move(formalParameters)), body(std::move(body)) {}
 
     llvm::Value *codegen() override
-    {
-        if(TheContext==NULL){
-            std::cout<<"Contexto is not initialized"<<std::endl;
-            return nullptr;
+    {        
+        std::vector<llvm::Type *> functionType(formalParameters.get()->getParamsNumber());
+        for(auto &fp : formalParameters.get()->parameters){
+            functionType.push_back(fp.get()->getType().get()->generateLLVMType(*TheContext));
         }
-        std::vector<llvm::Type *> Doubles(1, llvm::Type::getDoubleTy(*TheContext));
-        // llvm::FunctionType *FT = 
-        //     llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
 
-        // llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, name, TheModule.get());
 
-        // unsigned Idx = 0;
-        // for(auto &Arg : F->args()){
-        //     Arg.setName("BB");
+        llvm::FunctionType *FT = 
+            llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), functionType, false);
+
+        llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, name, TheModule.get());
+
+        unsigned Idx = 0;
+        for(auto &Arg : F->args()){
+            Arg.setName(this->name);
+        }
+        
+        if (!body.get())
+        {
+            std::cerr << "There is no instructions for this program." << std::endl;
+            return nullptr;
+        }                    
+        return F;
+
+        // Lo siguiente es para una llamada a función.
+        // std::cout << "Creating " << this->name<< " function code."<<std::endl;
+
+        // llvm::Function *function = TheModule->getFunction(this->name);
+
+        // if(!function){
+        //     std::cout << "There is a "<<this->name << " function already." <<std::endl;
+        //     //return nullptr;
+        //     function = 
         // }
 
-        // return F;
-        // if (!body.get())
-        // {
-        //     std::cerr << "There is no instructions for this program." << std::endl;
-        //     return nullptr;
+        // llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry",function);
+        // Builder->SetInsertPoint(BB);
+
+        // NamedValues.clear();
+        // for(auto &Arg : function->args()){
+        //     NamedValues[std::string(Arg.getName())] = &Arg;
         // }
-        // body.get()->codegen();        
-        return nullptr;
+
+        // std::cout << "Body function."<<std::endl;
+        // if(llvm::Value *RetVal = body->codegen()){            
+        //     Builder->CreateRet(RetVal);
+
+        //     llvm::verifyFunction(*function);
+        //     return function;
+        // }        
+
+        // function->eraseFromParent();
+        // return nullptr;
     }
 };
 
