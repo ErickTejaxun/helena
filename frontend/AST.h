@@ -363,9 +363,16 @@ public:
             case TDOUBLE:
                 return llvm::Type::getDoubleTy(context);
             case TSTRING:
-                return llvm::Type::getInt8Ty(context);
+                return Builder.get()->getPtrTy();
             case TBOOL:
                 return llvm::Type::getInt1Ty(context);
+            case TCHAR:
+                return llvm::Type::getInt8Ty(context);
+            case TVOID:
+                return llvm::Type::getVoidTy(context);
+            default:
+                return nullptr;
+            // On going implement classes types
         }
     }
 };
@@ -390,7 +397,7 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<Type> getType(){ return type;}
+    Type* getType(){ return this->type.get();}
 
 };
 
@@ -474,8 +481,8 @@ public:
     llvm::Value *codegen() override
     {        
         std::vector<llvm::Type *> functionType(formalParameters.get()->getParamsNumber());
-        for(auto &fp : formalParameters.get()->parameters){
-            functionType.push_back(fp.get()->getType().get()->generateLLVMType(*TheContext));
+        for(auto &fp : formalParameters.get()->parameters){            
+            functionType.push_back(fp.get()->getType()->generateLLVMType(*TheContext));
         }
 
 
