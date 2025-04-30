@@ -96,6 +96,17 @@ public:
     }
 };
 
+
+// std::unique_ptr<ASTNode> LogError(const char *Str){
+//     std::cerr<< "Error: " << Str<< std::endl;
+//     return nullptr;
+// }
+
+// llvm::Value * LogErrorV(const char *Str){
+//     LogError(Str);
+//     return nullptr;
+// }
+
 class ASTNode
 {
 public:
@@ -211,7 +222,9 @@ class BooleanExp : public Expression
 public:
     BooleanExp(int line, int column, bool value) : line(line), column(column), value(value) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return llvm::ConstantInt::get(*TheContext,llvm::APInt(1,value ? 1: 0));
+    }
 };
 
 class NullExp : public Expression
@@ -221,7 +234,9 @@ class NullExp : public Expression
 public:
     NullExp(int line, int column) : line(line), column(column) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return llvm::ConstantPointerNull::get(nullptr);
+    }
 };
 
 class VarExp : public Expression
@@ -239,7 +254,11 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        llvm::Value *V = NamedValues[name];
+        if(!V){
+            //LogErrorV("Variable not exists in this enviroment.");
+        }
+        return V;
     }
 };
 
@@ -258,7 +277,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        return Builder->CreateFAdd(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -276,7 +295,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        return Builder->CreateFSub(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -295,7 +314,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        return Builder->CreateFMul(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -314,7 +333,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        return Builder->CreateFDiv(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -467,6 +486,7 @@ public:
 class FunctionInst : public Instruction
 {
     std::string name;
+    std::unique_ptr<Type> type;
     // std::vector<std::unique_ptr<Parameter>> formalParameters;
     std::unique_ptr<FormalParameters> formalParameters;
     std::unique_ptr<Block> body;
@@ -478,6 +498,11 @@ public:
         : line(line), column(column), name(name),
           formalParameters(std::move(formalParameters)), body(std::move(body)) {}
 
+    FunctionInst(int line, int column, std::unique_ptr<Type> type, const std::string &name,
+                 std::unique_ptr<FormalParameters> formalParameters, std::unique_ptr<Block> body)
+        : line(line), column(column), name(name), type(std::move(type)),
+          formalParameters(std::move(formalParameters)), body(std::move(body)) {}          
+
     llvm::Value *codegen() override
     {        
         std::vector<llvm::Type *> functionType(formalParameters.get()->getParamsNumber());
@@ -485,9 +510,9 @@ public:
             functionType.push_back(fp.get()->getType()->generateLLVMType(*TheContext));
         }
 
-
+        std::cout<<"Vector de tipos generado"<<std::endl;
         llvm::FunctionType *FT = 
-            llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), functionType, false);
+            llvm::FunctionType::get(type.get()->generateLLVMType(*TheContext), functionType, false);
 
         llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, name, TheModule.get());
 
@@ -565,6 +590,8 @@ public:
         }
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
         */
+        std::cout<< "------------------------------------------"<<std::endl<<std::endl;
+        TheModule->print(llvm::errs(), nullptr);
         return nullptr;
     }
 };
@@ -592,7 +619,7 @@ public:
         : line(line), column(column), name(name), value(std::move(value)) {}
 
     llvm::Value *codegen() override;
-};
+}; 
 
 class Function : public Instruction
 {

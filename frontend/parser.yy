@@ -64,6 +64,7 @@
   RCBRACKET "}"
   COMMA ","
   TINT "int"
+  TDOUBLE "double"
   RETURN "return"
 ;
 
@@ -113,7 +114,7 @@ instruction:
 ;
 
 function:
-  type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,$2,std::move($4),std::move($6));}
+  type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,std::move($1),$2,std::move($4),std::move($6));}
 ;
 
 blockf:
@@ -140,8 +141,8 @@ returni:
 ;
 
 type:
-  "identifier" {$$=std::make_unique<Type>(TCLASS, $1);}
-  | "int" {$$ = std::make_unique<Type>(TINT);}
+  "int" {$$ = std::make_unique<Type>(TINT);}
+  | "double" {$$ = std::make_unique<Type>(TDOUBLE);}
 ;
 
 fparameters: 

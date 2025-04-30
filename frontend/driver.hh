@@ -22,7 +22,7 @@
 # include <string>
 # include <map>
 # include "parser.hh"
-# include "AST.h"
+//# include "AST.h"
 
 // Give Flex the prototype of yylex we want ...
 # define YY_DECL \
@@ -36,7 +36,7 @@ class driver
 public:
   driver ();
 
-  //std::map<std::string, int> variables;
+  std::map<std::string, int> variables;
   std::unique_ptr<Program> root;
 
 

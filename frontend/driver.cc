@@ -25,6 +25,8 @@ driver::driver () : trace_parsing (false), trace_scanning (false)
   
 }
 
+
+
 int driver::parse (const std::string &f)
 {
   file = f;
@@ -35,7 +37,7 @@ int driver::parse (const std::string &f)
   int res = parse ();
   scan_end ();
     
-  std::cout<<"Starting AST traversal." << std::endl;
+  std::cout<<"Starting AST traversal." << std::endl;  
   if(root.get() != NULL){
     //InitializeModule();
     root.get()->codegen();
@@ -43,7 +45,7 @@ int driver::parse (const std::string &f)
     std::cout<<"There is no AST to interpretate." << std::endl;
   }
   std::cout<<"Ending AST traversal." << std::endl;
-  
+  //TheModule->print(llvm::errs(), nullptr);
 
   return res;
 }

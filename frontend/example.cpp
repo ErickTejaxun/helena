@@ -5,3 +5,14 @@ int main(){
     int c = 10;
 }
 
+int suma(){
+    int a = 10;    
+}
+
+double sss(){
+    int a = 10;    
+}
+
+
+
+
