@@ -40,6 +40,7 @@ int driver::parse (const std::string &f)
   std::cout<<"Starting AST traversal." << std::endl;  
   if(root.get() != NULL){
     //InitializeModule();
+    //root.get()->addMainCallInstruction();     // Move to the codegen 
     root.get()->codegen();
   }else{
     std::cout<<"There is no AST to interpretate." << std::endl;

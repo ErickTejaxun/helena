@@ -352,6 +352,30 @@ public:
     llvm::Value *codegen() override;
 };
 
+
+class CallInstr : public Instruction
+{
+    std::string id;
+    std::vector<std::unique_ptr<Expression>> actual_parameters;
+    int line, column;
+
+public:
+    CallInstr(int line, int column,
+                   const std::string &id, std::vector<std::unique_ptr<Expression>> args)
+        : line(line), column(column), id(id),
+          actual_parameters(std::move(args)) {}
+
+    CallInstr(int line, int column,
+            const std::string &id)
+    : line(line), column(column), id(id) {}          
+
+    llvm::Value *codegen() override{
+        std::cout<<"Call instruction" << std::endl;
+        return nullptr;
+    }
+};
+
+
 // /*************/
 
 enum TYPE
@@ -381,8 +405,10 @@ public:
                 return llvm::Type::getInt32Ty(context);
             case TDOUBLE:
                 return llvm::Type::getDoubleTy(context);
-            case TSTRING:
-                return Builder.get()->getPtrTy();
+            case TSTRING:  {
+                auto int8Ty = llvm::Type::getInt8Ty(context);
+                return llvm::PointerType::get(int8Ty,0);                
+            }              
             case TBOOL:
                 return llvm::Type::getInt1Ty(context);
             case TCHAR:
@@ -573,9 +599,16 @@ public:
 
     Program(std::unique_ptr<Block> globals) : globals(std::move(globals)) {}
 
+    void addMainCallInstruction(){
+        std::unique_ptr<CallInstr> call = std::make_unique<CallInstr>(0,0,"main"); 
+        auto instCall = std::unique_ptr<Instruction>(call.release());
+        globals.get()->addInstruction(std::move(instCall));
+    }
+
     llvm::Value *codegen() override
     {
         InitializeModule();
+        addMainCallInstruction();
         if (!globals.get())
         {
             std::cerr << "There is no instructions for this program." << std::endl;
