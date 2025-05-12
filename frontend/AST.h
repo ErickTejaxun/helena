@@ -370,8 +370,36 @@ public:
     : line(line), column(column), id(id) {}          
 
     llvm::Value *codegen() override{
-        std::cout<<"Call instruction" << std::endl;
-        return nullptr;
+        
+        //Buscar la funcion en el módulo/contexto
+        llvm::Function *CalleF = TheModule->getFunction(id);
+
+        //Verificar si existe 
+        if(!CalleF){
+            std::cout<<"Función no encontrada."<<std::endl;
+            return nullptr;
+            //return LogErrorV("Función no encontrada.");
+        }
+
+        //Verificar la firma de la función con los parámetros.
+        if(CalleF->arg_size() !=  actual_parameters.size()){
+            std::cout<<"Función no encontrada con los parámetros indicados."<<std::endl;
+            return nullptr;
+            //return LogErrorV("Función no encontrada con los parámetros indicados.");            
+        }
+
+        std::cout<<"Funcion encontrada"<<std::endl;
+
+        std::vector<llvm::Value *> ArgsV;
+        // for(unsigned i = 0, e=actual_parameters.size(); i != e; i++){
+        //     ArgsV.push_back(actual_parameters[i].get()->codegen());
+        //     if(!ArgsV.back()){
+        //         return nullptr;
+        //     }
+        // }
+        //return nullptr;
+        return Builder->CreateCall(CalleF, ArgsV, "calltmp");
+        
     }
 };
 
@@ -547,42 +575,31 @@ public:
             Arg.setName(this->name);
         }
         
-        if (!body.get())
-        {
-            std::cerr << "There is no instructions for this program." << std::endl;
-            return nullptr;
-        }                    
-        return F;
+        // if (!body.get())
+        // {
+        //     std::cerr << "There is no instructions for this program." << std::endl;
+        //     return nullptr;
+        // }                    
+        //return F;
 
-        // Lo siguiente es para una llamada a función.
-        // std::cout << "Creating " << this->name<< " function code."<<std::endl;
+        //Pendiente, agregar validación de que ya exista la función. 
 
-        // llvm::Function *function = TheModule->getFunction(this->name);
+        llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry",F);
+        Builder->SetInsertPoint(BB);
 
-        // if(!function){
-        //     std::cout << "There is a "<<this->name << " function already." <<std::endl;
-        //     //return nullptr;
-        //     function = 
-        // }
+        NamedValues.clear();
+        for(auto &Arg : F->args()){
+            NamedValues[std::string(Arg.getName())] = &Arg;
+        }
 
-        // llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry",function);
-        // Builder->SetInsertPoint(BB);
+        if(llvm::Value *RetVal = this->body->codegen()){
+            Builder->CreateRet(RetVal);
 
-        // NamedValues.clear();
-        // for(auto &Arg : function->args()){
-        //     NamedValues[std::string(Arg.getName())] = &Arg;
-        // }
+            //Se verifica la consistencia del código de la función generada.
+            llvm::verifyFunction(*F);
+        }
 
-        // std::cout << "Body function."<<std::endl;
-        // if(llvm::Value *RetVal = body->codegen()){            
-        //     Builder->CreateRet(RetVal);
-
-        //     llvm::verifyFunction(*function);
-        //     return function;
-        // }        
-
-        // function->eraseFromParent();
-        // return nullptr;
+        return F;        
     }
 };
 
@@ -602,7 +619,7 @@ public:
     void addMainCallInstruction(){
         std::unique_ptr<CallInstr> call = std::make_unique<CallInstr>(0,0,"main"); 
         auto instCall = std::unique_ptr<Instruction>(call.release());
-        globals.get()->addInstruction(std::move(instCall));
+        //globals.get()->addInstruction(std::move(instCall));
     }
 
     llvm::Value *codegen() override
