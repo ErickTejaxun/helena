@@ -1,16 +1,16 @@
 
 int main(){
     int a = 10;
-    int b = 10;
-    int c = 10;
+    int b = 11;
+    int c = 12;
 }
 
 int suma(){
-    int a = 10;    
+    int a = 13;    
 }
 
 double sss(){
-    int a = 10;    
+    double a = 14;    
 }
 
 

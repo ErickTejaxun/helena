@@ -732,6 +732,20 @@ public:
     llvm::Value *codegen() override
     {
         std::cout << "Declaration Node" << std::endl;
+        std::vector<llvm::Value *> variables;
+        
+        for(const std::string &id: ids){
+            llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*TheContext),0,id);
+            variables.push_back(allocation);
+        }
+
+        if(value != nullptr){
+            llvm::Value *val = value.get()->codegen();
+            for(auto var: variables){
+                Builder->CreateStore(val,var);
+            }
+        }
+                
         return nullptr; // Placeholder
     }
 };
