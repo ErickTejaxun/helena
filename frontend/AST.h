@@ -183,6 +183,7 @@ public:
 
     llvm::Value *codegen() override
     {
+        std::cout<<"Integer expression node"<<std::endl;
         return llvm::ConstantInt::get(*TheContext, llvm::APInt(32, value));
     }
 };
@@ -254,10 +255,17 @@ public:
 
     llvm::Value *codegen() override
     {
+        std::cout<<"Buscando variables "<< name<<std::endl;
         llvm::Value *V = NamedValues[name];
         if(!V){
             //LogErrorV("Variable not exists in this enviroment.");
-        }
+            std::cout<<"No se ha encontrado la variable alv."<<std::endl;
+            for(auto var : NamedValues){
+                //std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.first<<std::endl;
+            }
+            return nullptr;
+        }        
         return V;
     }
 };
@@ -277,7 +285,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return Builder->CreateFAdd(left_expression.get()->codegen(),right_expression.get()->codegen());
+        return Builder->CreateAdd(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -737,6 +745,7 @@ public:
         for(const std::string &id: ids){
             llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*TheContext),0,id);
             variables.push_back(allocation);
+            NamedValues[id] = allocation;
         }
 
         if(value != nullptr){
@@ -858,7 +867,8 @@ public:
 
     llvm::Value *codegen() override
     {
-        return nullptr;
+        llvm::ReturnInst *ret = Builder->CreateRet(exp.get()->codegen());
+        return ret;
     }
 };
 

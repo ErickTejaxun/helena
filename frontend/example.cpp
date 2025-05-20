@@ -1,16 +1,19 @@
 
 int main(){
-    int a = 10;
+    int a = 10+233;
     int b = 11;
     int c = 12;
+    return 1;
 }
 
 int suma(){
-    int a = 13;    
+    int d = 13;    
+    return d;
 }
 
 double sss(){
-    double a = 14;    
+    double e = 14;    
+    return e;
 }
 
 
