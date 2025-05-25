@@ -10,7 +10,7 @@ int suma(){
     int d = 13;    
     return d;
 }
-
+main();
 double sss(){
     double e = 14;    
     return e;

@@ -62,6 +62,11 @@ static void InitializeModule()
 /* Global configuration's variables*/
 extern std::vector<Error> errorList;
 
+//Utilidades para escribir
+void writeModuleToFile(llvm::Module * TheModule, const std::string & filename){
+    std::error_code EC;
+};
+
 enum TYPES
 {
     type_integer,
@@ -371,7 +376,7 @@ public:
     CallInstr(int line, int column,
                    const std::string &id, std::vector<std::unique_ptr<Expression>> args)
         : line(line), column(column), id(id),
-          actual_parameters(std::move(args)) {}
+          actual_parameters(std::move(args)) {}        
 
     CallInstr(int line, int column,
             const std::string &id)

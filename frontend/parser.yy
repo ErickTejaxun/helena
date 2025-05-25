@@ -86,6 +86,7 @@
 %nterm <std::unique_ptr<Instruction>> returni 
 %nterm <std::unique_ptr<Instruction>> instructionf
 %nterm <std::unique_ptr<Instruction>> declaration
+%nterm <std::unique_ptr<Instruction>> call
 
 
 %printer { yyo << "Error---"; } <*>;
@@ -111,6 +112,7 @@ linstructions:
 instruction: 
   assignment { $$ = std::move($1);}
 | function {$$ = std::move($1);}
+| call { $$ = std::move($1);}
 ;
 
 function:
@@ -130,6 +132,11 @@ instructionf:
   instruction {$$=std::move($1);}
 | returni { $$ = std::move($1);}
 | declaration { $$ = std::move($1);}
+| call { $$ = std::move($1);}
+;
+
+call: 
+  "identifier" "(" ")" ";"  { $$ = std::make_unique<CallInstr>(0,0,std::move($1));}
 ;
 
 declaration: 

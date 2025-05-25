@@ -38,13 +38,13 @@ int driver::parse (const std::string &f)
   scan_end ();
     
   std::cout<<"Starting AST traversal." << std::endl;  
-  if(root.get() != NULL){
-    //InitializeModule();
+  if(root.get() != NULL){    
     //root.get()->addMainCallInstruction();     // Move to the codegen 
     root.get()->codegen();
   }else{
     std::cout<<"There is no AST to interpretate." << std::endl;
   }
+  std::cout<<"------------------------------------" << std::endl;
   std::cout<<"Ending AST traversal." << std::endl;
   //TheModule->print(llvm::errs(), nullptr);
 
