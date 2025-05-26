@@ -70,6 +70,7 @@
 
 %token <std::string> IDENTIFIER "identifier"
 %token <int> NUMBER "number"
+%token <double> NUMBERD "decimal"
 //%nterm <int> exp
 %nterm <std::unique_ptr<Expression>> exp
 //%nterm <std::unique_ptr<Block>> block
@@ -120,7 +121,8 @@ function:
 ;
 
 blockf:
-  "{" linstructionf "}" {$$=std::move($2);}
+  "{" linstructionf returni "}" { $2->addInstruction(std::move($3)); $$=std::move($2);}
+  | "{" linstructionf "}" {$$=std::move($2);}
 ;
 
 linstructionf: 
@@ -129,9 +131,7 @@ linstructionf:
 ;
 
 instructionf:
-  instruction {$$=std::move($1);}
-| returni { $$ = std::move($1);}
-| declaration { $$ = std::move($1);}
+  declaration { $$ = std::move($1);}
 | call { $$ = std::move($1);}
 ;
 
@@ -148,8 +148,8 @@ returni:
 ;
 
 type:
-  "int" {$$ = std::make_unique<Type>(TINT);}
-  | "double" {$$ = std::make_unique<Type>(TDOUBLE);}
+  TINT {$$ = std::make_unique<Type>(TINT);}
+  | TDOUBLE {$$ = std::make_unique<Type>(TDOUBLE);}
 ;
 
 fparameters: 
@@ -170,12 +170,13 @@ assignment:
 %left "**";
 
 exp:
-  "number"      { $$ = std::make_unique<IntExp>(0,0,std::move($1));}
+   NUMBER      { $$ = std::make_unique<IntExp>(0,0,std::move($1));}
+|  NUMBERD      { $$ = std::make_unique<DoubleExp>(0,0,std::move($1));}   
 | "identifier"  { $$ = std::make_unique<VarExp>(0,0,std::move($1));}
 | exp "+" exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
 | exp "-" exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
 | exp "*" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
-| exp "**" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
+| exp "**" exp  { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
 | exp "/" exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
 | "(" exp ")"   { $$ = std::move($2); }
 ;

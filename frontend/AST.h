@@ -63,9 +63,19 @@ static void InitializeModule()
 extern std::vector<Error> errorList;
 
 //Utilidades para escribir
-void writeModuleToFile(llvm::Module * TheModule, const std::string & filename){
-    std::error_code EC;
-};
+// void writeModuleToFile(llvm::Module * TheModule, const std::string & filename){
+
+//     std::error_code EC;
+    
+//     llvm::raw_fd_ostream outFile (filename, EC);
+
+//     if(EC){
+//         llvm::errs() << "Error abriendo archivo "<<filename << ": " << EC.message() << "\n";
+//         return;    
+//     }
+
+//     TheModule->print(outFile,nullptr);
+// };
 
 enum TYPES
 {
@@ -540,13 +550,14 @@ public:
 
         std::size_t numberOfInstructions = instructions.size();
         //std::cout << "There are " << numberOfInstructions << " instructions." << std::endl;
+        llvm::Value * currentValue = nullptr;
         for (const auto &ptr : instructions)
         {
             std::cout << typeid(ptr.get()).name() << std::endl;
-            ptr.get()->codegen();
+            currentValue = ptr.get()->codegen();
         }
         // return llvm::ConstantFP::get(*TheContext, llvm::APFloat(100.00));
-        return nullptr;
+        return currentValue;
     }
 };
 
@@ -606,11 +617,11 @@ public:
         }
 
         if(llvm::Value *RetVal = this->body->codegen()){
-            Builder->CreateRet(RetVal);
-
+            Builder->CreateRet(RetVal); //Se implenta el nodo retorno
+            Builder->ClearInsertionPoint();
             //Se verifica la consistencia del código de la función generada.
             llvm::verifyFunction(*F);
-        }
+        }        
 
         return F;        
     }
@@ -654,7 +665,18 @@ public:
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
         */
         std::cout<< "------------------------------------------"<<std::endl<<std::endl;
-        TheModule->print(llvm::errs(), nullptr);
+        //TheModule->print(llvm::errs(), nullptr);
+        const std::string & filename = "out.ll";
+        std::error_code EC;    
+        llvm::raw_fd_ostream outFile (filename, EC);
+    
+        if(EC){
+            llvm::errs() << "Error abriendo archivo "<<filename << ": " << EC.message() << "\n";
+            return nullptr;    
+        }
+    
+        TheModule->print(outFile,nullptr);
+
         return nullptr;
     }
 };
@@ -872,8 +894,9 @@ public:
 
     llvm::Value *codegen() override
     {
-        llvm::ReturnInst *ret = Builder->CreateRet(exp.get()->codegen());
-        return ret;
+        //llvm::ReturnInst *ret = Builder->CreateRet(exp.get()->codegen());
+        //return ret;
+        return exp.get()->codegen();
     }
 };
 

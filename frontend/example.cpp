@@ -1,6 +1,6 @@
-
-int main(){
-    int a = 10+233;
+int main()
+{
+    int a = 10233;
     int b = 11;
     int c = 12;
     return 1;
@@ -11,8 +11,10 @@ int suma(){
     return d;
 }
 main();
+main();
+main();
 double sss(){
-    double e = 14;    
+    double e = 14.00111;    
     return e;
 }
 
