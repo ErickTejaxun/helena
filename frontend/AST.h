@@ -549,14 +549,13 @@ public:
         std::cout << "AST Node: " << typeid(this).name() << std::endl;
 
         std::size_t numberOfInstructions = instructions.size();
-        //std::cout << "There are " << numberOfInstructions << " instructions." << std::endl;
+        
         llvm::Value * currentValue = nullptr;
         for (const auto &ptr : instructions)
         {
             std::cout << typeid(ptr.get()).name() << std::endl;
             currentValue = ptr.get()->codegen();
-        }
-        // return llvm::ConstantFP::get(*TheContext, llvm::APFloat(100.00));
+        }        
         return currentValue;
     }
 };
@@ -617,7 +616,7 @@ public:
         }
 
         if(llvm::Value *RetVal = this->body->codegen()){
-            Builder->CreateRet(RetVal); //Se implenta el nodo retorno
+            //Builder->CreateRet(RetVal); //Se implenta el nodo retorno
             Builder->ClearInsertionPoint();
             //Se verifica la consistencia del código de la función generada.
             llvm::verifyFunction(*F);
@@ -894,9 +893,26 @@ public:
 
     llvm::Value *codegen() override
     {
-        //llvm::ReturnInst *ret = Builder->CreateRet(exp.get()->codegen());
-        //return ret;
-        return exp.get()->codegen();
+        //Tenemos que tener la funcion actual para saber el tipo.
+        llvm::Function* currentFunction = Builder->GetInsertBlock()->getParent();
+
+        llvm::Value *ret = Builder->CreateRet(exp.get()->codegen());
+        if(ret->getType()->isPointerTy()){
+            llvm::Type* loadedType = ret->getType();
+
+            //Verificamos que coincidan los tipos
+            if(currentFunction->getReturnType() != loadedType){
+                //Imprimos error
+            }
+
+            return Builder->CreateLoad(loadedType, ret, "loadtmp");
+        }   
+
+        //Agregar casteos explícitos y otras validaciones
+        
+
+        return ret;
+        //return exp.get()->codegen();
     }
 };
 

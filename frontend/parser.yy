@@ -120,9 +120,8 @@ function:
   type "identifier" "(" fparameters ")" blockf {$$ = std::make_unique<FunctionInst>(0,0,std::move($1),$2,std::move($4),std::move($6));}
 ;
 
-blockf:
-  "{" linstructionf returni "}" { $2->addInstruction(std::move($3)); $$=std::move($2);}
-  | "{" linstructionf "}" {$$=std::move($2);}
+blockf:  
+   "{" linstructionf "}" {$$=std::move($2);}
 ;
 
 linstructionf: 
@@ -133,6 +132,7 @@ linstructionf:
 instructionf:
   declaration { $$ = std::move($1);}
 | call { $$ = std::move($1);}
+| returni { $$ = std::move($1);}
 ;
 
 call: 
