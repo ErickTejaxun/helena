@@ -280,8 +280,10 @@ public:
                 std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.first<<std::endl;
             }
             return nullptr;
-        }        
-        return V;
+        } 
+        
+        //Aplicar verificacion de tipo de llamada si de referencia o por valor.         
+        return Builder->CreateLoad(V->getType(), V);
     }
 };
 
@@ -318,7 +320,16 @@ public:
 
     llvm::Value *codegen() override
     {
-        return Builder->CreateFSub(left_expression.get()->codegen(),right_expression.get()->codegen());
+        llvm::Value *l = left_expression.get()->codegen();
+        llvm::Value *r = right_expression.get()->codegen();
+        if(!l->getType()->isPointerTy()){
+            l = Builder->CreateLoad(l->getType().getPointerElementType(),l);
+        }
+        if(!r->getType()->isPointerTy()){
+            r = Builder->CreateLoad(tipor,r);
+        }
+
+        return Builder->CreateSub(l,r);
     }
 };
 
@@ -337,7 +348,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return Builder->CreateFMul(left_expression.get()->codegen(),right_expression.get()->codegen());
+        return Builder->CreateMul(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -356,7 +367,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return Builder->CreateFDiv(left_expression.get()->codegen(),right_expression.get()->codegen());
+        return Builder->CreateUDiv(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
 };
 
@@ -896,7 +907,7 @@ public:
         //Tenemos que tener la funcion actual para saber el tipo.
         llvm::Function* currentFunction = Builder->GetInsertBlock()->getParent();
 
-        llvm::Value *ret = Builder->CreateRet(exp.get()->codegen());
+        llvm::Value *ret = exp.get()->codegen();
         if(ret->getType()->isPointerTy()){
             llvm::Type* loadedType = ret->getType();
 
@@ -905,13 +916,13 @@ public:
                 //Imprimos error
             }
 
-            return Builder->CreateLoad(loadedType, ret, "loadtmp");
+            return Builder->CreateRet(Builder->CreateLoad(currentFunction->getReturnType(), ret, "loadtmp"));
         }   
 
         //Agregar casteos explícitos y otras validaciones
         
 
-        return ret;
+        return Builder->CreateRet(ret);
         //return exp.get()->codegen();
     }
 };

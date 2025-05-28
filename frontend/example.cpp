@@ -1,9 +1,9 @@
 int main()
 {
-    int a = 10233;
-    int b = 11;
+    int a = 102+3+3+3;
+    int b = 11*2;
     int c = 12;
-    return 1;
+    return 1-c;
 }
 
 int suma(){
