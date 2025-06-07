@@ -288,10 +288,10 @@ public:
 
     Type * getType() override
     {
-        //return new Type(TSTRING);
-        Type *localType = new Type();
-        localType->setIntType();
-        return localType;        
+        return new Type(TINT);
+        // Type *localType = new Type();
+        // localType->setIntType();
+        // return localType;        
     }  
 };
 
@@ -400,7 +400,19 @@ public:
 
     Type * getType() override
     {
-        return new Type(TNULL);
+        std::cout<<"Buscando variables "<< name<<std::endl;
+        //llvm::Value *V = NamedValues[name];
+        HelenaVariable *V = NamedValues[name];
+        if(!V){
+            //LogErrorV("Variable not exists in this enviroment.");
+            std::cout<<"No se ha encontrado la variable alv."<<std::endl;
+            for(auto var : NamedValues){
+                //std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.first<<std::endl;
+            }
+            return nullptr;
+        } 
+        return V->getType();                        
     }   
         
 };
@@ -422,6 +434,11 @@ public:
     {
         return Builder->CreateAdd(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
+
+    Type * getType() override
+    {
+        return new Type(TINT);        
+    }     
 };
 
 class SubExp : public Expression
@@ -462,6 +479,11 @@ public:
 
         return Builder->CreateSub(l,r);
     }
+
+    Type * getType() override
+    {
+        return new Type(TINT);        
+    }         
 };
 
 class MulExp : public Expression
@@ -481,6 +503,11 @@ public:
     {
         return Builder->CreateMul(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
+
+    Type * getType() override
+    {
+        return new Type(TINT);        
+    }         
 };
 
 class DivExp : public Expression
@@ -500,6 +527,11 @@ public:
     {
         return Builder->CreateUDiv(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
+    
+    Type * getType() override
+    {
+        return new Type(TINT);        
+    }    
 };
 
 class CallExpression : public Expression
