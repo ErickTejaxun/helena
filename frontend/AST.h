@@ -35,7 +35,82 @@ class ASTNode;
 static std::unique_ptr<llvm::LLVMContext> TheContext;
 static std::unique_ptr<llvm::IRBuilder<>> Builder;
 static std::unique_ptr<llvm::Module> TheModule;
-static std::map<std::string, llvm::Value *> NamedValues;
+//static std::map<std::string, llvm::Value *> NamedValues;
+class Type;
+class HelenaVariable{
+    private:
+        Type *type;
+        llvm::Value * Value;
+    public:
+        Type *getType(){return type;}
+        llvm::Value *getValue(){return Value;}
+        void setType(Type *type){type =type;}
+        void setValue(llvm::Value *value){Value = value;}
+};
+static std::map<std::string, HelenaVariable *> NamedValues;
+
+// /*************/
+
+enum TYPE
+{
+    TINT,
+    TSTRING,
+    TDOUBLE,
+    TFLOAT,
+    TCHAR,
+    TBOOL,
+    TVOID,
+    TCLASS,
+    TNULL
+};
+
+class Type
+{
+    TYPE type;
+    std::string name;
+
+public:
+    Type(){}
+    Type(TYPE type) : type(type) {}
+    Type(TYPE type, const std::string name) : type(type), name(name) {}
+
+    void setIntType(){
+        type = TINT;
+    }
+
+    void setStringType(){
+        type = TSTRING;
+    }
+
+
+
+    llvm::Type *generateLLVMType(llvm::LLVMContext &context){
+        switch(type){
+            case TINT:
+                return llvm::Type::getInt32Ty(context);
+            case TDOUBLE:
+                return llvm::Type::getDoubleTy(context);
+            case TSTRING:  {
+                auto int8Ty = llvm::Type::getInt8Ty(context);
+                return llvm::PointerType::get(int8Ty,0);                
+            }              
+            case TBOOL:
+                return llvm::Type::getInt1Ty(context);
+            case TCHAR:
+                return llvm::Type::getInt8Ty(context);
+            case TVOID:
+                return llvm::Type::getVoidTy(context);
+            default:
+                return nullptr;
+            // On going implement classes types
+        }
+    }
+};
+/*************/
+
+
+
+
 
 // std::unique_ptr<ASTNode> LogError(const char *Str) {
 //   fprintf(stderr, "Error: %s\n", Str);
@@ -135,6 +210,7 @@ public:
     virtual ~Expression() = default;
     llvm::Value *codegen() override = 0;
     virtual void print() {}
+    virtual Type *getType() = 0;
 };
 
 class Instruction : public ASTNode
@@ -186,6 +262,14 @@ public:
         // True due the close char is like C
         return llvm::ConstantDataArray::getString(*TheContext, value, true);
     }
+
+    Type * getType() override
+    {
+        //return new Type(TSTRING);
+        Type *localType = new Type();
+        localType->setIntType();
+        return localType;        
+    }
 };
 
 class IntExp : public Expression
@@ -201,6 +285,14 @@ public:
         std::cout<<"Integer expression node"<<std::endl;
         return llvm::ConstantInt::get(*TheContext, llvm::APInt(32, value));
     }
+
+    Type * getType() override
+    {
+        //return new Type(TSTRING);
+        Type *localType = new Type();
+        localType->setIntType();
+        return localType;        
+    }  
 };
 
 class DoubleExp : public Expression
@@ -215,6 +307,11 @@ public:
     {
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
     }
+
+    Type * getType() override
+    {
+        return new Type(TDOUBLE);
+    }       
 };
 
 class FloatExp : public Expression
@@ -228,6 +325,11 @@ public:
     {
         return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
     }
+
+    Type * getType() override
+    {
+        return new Type(TFLOAT);
+    }        
 };
 
 class BooleanExp : public Expression
@@ -241,6 +343,11 @@ public:
     llvm::Value *codegen() override{
         return llvm::ConstantInt::get(*TheContext,llvm::APInt(1,value ? 1: 0));
     }
+
+    Type * getType() override
+    {
+        return new Type(TBOOL);
+    }        
 };
 
 class NullExp : public Expression
@@ -253,6 +360,10 @@ public:
     llvm::Value *codegen() override{
         return llvm::ConstantPointerNull::get(nullptr);
     }
+    Type * getType() override
+    {
+        return new Type(TNULL);
+    }        
 };
 
 class VarExp : public Expression
@@ -271,7 +382,8 @@ public:
     llvm::Value *codegen() override
     {
         std::cout<<"Buscando variables "<< name<<std::endl;
-        llvm::Value *V = NamedValues[name];
+        //llvm::Value *V = NamedValues[name];
+        HelenaVariable *V = NamedValues[name];
         if(!V){
             //LogErrorV("Variable not exists in this enviroment.");
             std::cout<<"No se ha encontrado la variable alv."<<std::endl;
@@ -283,8 +395,14 @@ public:
         } 
         
         //Aplicar verificacion de tipo de llamada si de referencia o por valor.         
-        return Builder->CreateLoad(V->getType(), V);
+        return Builder->CreateLoad(V->getType()->generateLLVMType(*TheContext), V->getValue());
     }
+
+    Type * getType() override
+    {
+        return new Type(TNULL);
+    }   
+        
 };
 
 class AddExp : public Expression
@@ -322,11 +440,24 @@ public:
     {
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
-        if(!l->getType()->isPointerTy()){
-            l = Builder->CreateLoad(l->getType().getPointerElementType(),l);
+        if(l->getType()->isPointerTy()){
+            std::cout<<"Variable type pointer" << std::endl;
+            std::cout<< l<< std::endl;
+            l = Builder->CreateLoad(r->getType(),l);            
         }
-        if(!r->getType()->isPointerTy()){
-            r = Builder->CreateLoad(tipor,r);
+        else
+        {
+            //l = Builder->CreateLoad(l->getType(),l);
+        }
+
+        if(r->getType()->isPointerTy()){
+            std::cout<<"Variable type pointer" << std::endl;
+            std::cout<< r->getType()->isIntegerTy()<< std::endl;
+            r = Builder->CreateLoad(l->getType(),r);        
+
+        }
+        else{
+            //r = Builder->CreateLoad(r->getType(),r);
         }
 
         return Builder->CreateSub(l,r);
@@ -438,52 +569,9 @@ public:
 };
 
 
-// /*************/
 
-enum TYPE
-{
-    TINT,
-    TSTRING,
-    TDOUBLE,
-    TFLOAT,
-    TCHAR,
-    TBOOL,
-    TVOID,
-    TCLASS
-};
 
-class Type
-{
-    TYPE type;
-    std::string name;
 
-public:
-    Type(TYPE type) : type(type) {}
-    Type(TYPE type, const std::string name) : type(type), name(name) {}
-
-    llvm::Type *generateLLVMType(llvm::LLVMContext &context){
-        switch(type){
-            case TINT:
-                return llvm::Type::getInt32Ty(context);
-            case TDOUBLE:
-                return llvm::Type::getDoubleTy(context);
-            case TSTRING:  {
-                auto int8Ty = llvm::Type::getInt8Ty(context);
-                return llvm::PointerType::get(int8Ty,0);                
-            }              
-            case TBOOL:
-                return llvm::Type::getInt1Ty(context);
-            case TCHAR:
-                return llvm::Type::getInt8Ty(context);
-            case TVOID:
-                return llvm::Type::getVoidTy(context);
-            default:
-                return nullptr;
-            // On going implement classes types
-        }
-    }
-};
-/*************/
 
 class Parameter : public Instruction
 {
@@ -622,8 +710,11 @@ public:
         Builder->SetInsertPoint(BB);
 
         NamedValues.clear();
-        for(auto &Arg : F->args()){
-            NamedValues[std::string(Arg.getName())] = &Arg;
+        for(llvm::Argument &Arg : F->args()){
+            HelenaVariable *Variable = new HelenaVariable();
+            Variable->setValue (&Arg);
+            Variable->setType(type.get());                       
+            NamedValues[std::string(Arg.getName())] =  Variable;
         }
 
         if(llvm::Value *RetVal = this->body->codegen()){
@@ -781,8 +872,11 @@ public:
         
         for(const std::string &id: ids){
             llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*TheContext),0,id);
+            HelenaVariable *Variable = new HelenaVariable();
+            Variable->setValue (allocation);
+            Variable->setType(type.get());
             variables.push_back(allocation);
-            NamedValues[id] = allocation;
+            NamedValues[id] = Variable;
         }
 
         if(value != nullptr){

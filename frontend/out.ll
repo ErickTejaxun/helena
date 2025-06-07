@@ -9,23 +9,8 @@ entry:
   store i32 22, ptr %b, align 4
   %c = alloca i32, align 4
   store i32 12, ptr %c, align 4
-  ret i32 0
-}
-
-define i32 @suma() {
-entry:
-  %d = alloca i32, align 4
-  store i32 13, ptr %d, align 4
-  %0 = load ptr, ptr %d, align 8
-  %loadtmp = load i32, ptr %0, align 4
-  ret i32 %loadtmp
-}
-
-define double @sss() {
-entry:
-  %e = alloca double, align 8
-  store double 1.400000e+01, ptr %e, align 8
-  %0 = load ptr, ptr %e, align 8
-  %loadtmp = load double, ptr %0, align 8
-  ret double %loadtmp
+  %0 = load ptr, ptr %c, align 8
+  %1 = load i32, ptr %0, align 4
+  %2 = sub i32 %1, 1
+  ret i32 %2
 }
