@@ -42,6 +42,7 @@ class HelenaVariable{
         Type *type;
         llvm::Value * Value;
     public:
+        HelenaVariable(llvm::Value * value, Type *type): Value(value), type(type){}
         Type *getType(){return type;}
         llvm::Value *getValue(){return Value;}
         void setType(Type *type){type =type;}
@@ -400,7 +401,7 @@ public:
 
     Type * getType() override
     {
-        std::cout<<"Buscando variables "<< name<<std::endl;
+        std::cout<<"Buscando tipo de variables "<< name<<std::endl;
         //llvm::Value *V = NamedValues[name];
         HelenaVariable *V = NamedValues[name];
         if(!V){
@@ -412,6 +413,8 @@ public:
             }
             return nullptr;
         } 
+        std::cout<<"Variable "<<name << " Tipo: " <<std::endl;
+        V->getType()->generateLLVMType(*TheContext)->print(llvm::errs());
         return V->getType();                        
     }   
         
@@ -455,29 +458,39 @@ public:
 
     llvm::Value *codegen() override
     {
+        Type *typeL  = left_expression.get()->getType();
+        Type *typeR  = right_expression.get()->getType();
+
         llvm::Value *l = left_expression.get()->codegen();
-        llvm::Value *r = right_expression.get()->codegen();
-        if(l->getType()->isPointerTy()){
-            std::cout<<"Variable type pointer" << std::endl;
-            std::cout<< l<< std::endl;
-            l = Builder->CreateLoad(r->getType(),l);            
-        }
-        else
-        {
-            //l = Builder->CreateLoad(l->getType(),l);
-        }
+        llvm::Value *r = right_expression.get()->codegen();        
 
-        if(r->getType()->isPointerTy()){
-            std::cout<<"Variable type pointer" << std::endl;
-            std::cout<< r->getType()->isIntegerTy()<< std::endl;
-            r = Builder->CreateLoad(l->getType(),r);        
-
+        if(typeL->generateLLVMType(*TheContext) == typeR->generateLLVMType(*TheContext)){
+            return Builder->CreateSub(l,r);
         }
         else{
-            //r = Builder->CreateLoad(r->getType(),r);
-        }
 
-        return Builder->CreateSub(l,r);
+            if(l->getType()->isPointerTy()){
+                std::cout<<"Variable type pointer" << std::endl;
+                std::cout<< l<< std::endl;
+                l = Builder->CreateLoad(r->getType(),l);            
+            }
+            else
+            {
+                //l = Builder->CreateLoad(l->getType(),l);
+            }
+    
+            if(r->getType()->isPointerTy()){
+                std::cout<<"Variable type pointer" << std::endl;
+                std::cout<< r->getType()->isIntegerTy()<< std::endl;
+                r = Builder->CreateLoad(l->getType(),r);        
+    
+            }
+            else{
+                //r = Builder->CreateLoad(r->getType(),r);
+            }
+    
+            return Builder->CreateSub(l,r);
+        }
     }
 
     Type * getType() override
@@ -527,7 +540,7 @@ public:
     {
         return Builder->CreateUDiv(left_expression.get()->codegen(),right_expression.get()->codegen());
     }
-    
+
     Type * getType() override
     {
         return new Type(TINT);        
@@ -743,9 +756,9 @@ public:
 
         NamedValues.clear();
         for(llvm::Argument &Arg : F->args()){
-            HelenaVariable *Variable = new HelenaVariable();
-            Variable->setValue (&Arg);
-            Variable->setType(type.get());                       
+            HelenaVariable *Variable = new HelenaVariable(&Arg, type.get());
+            //Variable->setValue (&Arg);
+            //Variable->setType(type.get());                       
             NamedValues[std::string(Arg.getName())] =  Variable;
         }
 
@@ -904,9 +917,9 @@ public:
         
         for(const std::string &id: ids){
             llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*TheContext),0,id);
-            HelenaVariable *Variable = new HelenaVariable();
-            Variable->setValue (allocation);
-            Variable->setType(type.get());
+            HelenaVariable *Variable = new HelenaVariable(allocation, type.get());
+            //Variable->setValue (allocation);
+            //Variable->setType(type.get());
             variables.push_back(allocation);
             NamedValues[id] = Variable;
         }
