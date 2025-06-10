@@ -116,6 +116,7 @@ id    [a-zA-Z][a-zA-Z_0-9]*
 blank [ \t\r]
 decimal [0-9]+\.[0-9]*
 int   [0-9]+
+stringchar \"(\\.|[^"\\])*\" 
 
 %{
   // Code run each time a pattern is matched.
@@ -146,7 +147,10 @@ int   [0-9]+
 "int"        return yy::parser::make_TINT (loc);
 "double"     return yy::parser::make_TDOUBLE (loc);
 "return"     return yy::parser::make_RETURN (loc);
+"string"     return yy::parser::make_TSTRING (loc);
+"print"     return yy::parser::make_PRINT (loc);
 {decimal}      return make_NUMBERD (yytext, loc);
+{stringchar}   return yy::parser::make_STRING (yytext, loc);
 {int}      return make_NUMBER (yytext, loc);
 {id}       return yy::parser::make_IDENTIFIER (yytext, loc);
 .          {

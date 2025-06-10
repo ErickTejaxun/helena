@@ -65,10 +65,13 @@
   COMMA ","
   TINT "int"
   TDOUBLE "double"
+  TSTRING "string"
   RETURN "return"
+  PRINT "print"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
+%token <std::string> STRING "stringchar"
 %token <int> NUMBER "number"
 %token <double> NUMBERD "decimal"
 //%nterm <int> exp
@@ -88,6 +91,7 @@
 %nterm <std::unique_ptr<Instruction>> instructionf
 %nterm <std::unique_ptr<Instruction>> declaration
 %nterm <std::unique_ptr<Instruction>> call
+%nterm <std::unique_ptr<Instruction>> print
 
 
 %printer { yyo << "Error---"; } <*>;
@@ -133,6 +137,11 @@ instructionf:
   declaration { $$ = std::move($1);}
 | call { $$ = std::move($1);}
 | returni { $$ = std::move($1);}
+| print { $$ = std::move($1);}
+;
+
+print :
+  "print" "(" exp  ")" ";" { $$ = std::make_unique<PrintInstr>(0,0,std::move($3));}
 ;
 
 call: 
@@ -150,6 +159,7 @@ returni:
 type:
   TINT {$$ = std::make_unique<Type>(TINT);}
   | TDOUBLE {$$ = std::make_unique<Type>(TDOUBLE);}
+  | TSTRING {$$ = std::make_unique<Type>(TSTRING);}
 ;
 
 fparameters: 
@@ -173,6 +183,7 @@ exp:
    NUMBER      { $$ = std::make_unique<IntExp>(0,0,std::move($1));}
 |  NUMBERD      { $$ = std::make_unique<DoubleExp>(0,0,std::move($1));}   
 | "identifier"  { $$ = std::make_unique<VarExp>(0,0,std::move($1));}
+| "stringchar"  { $$ = std::make_unique<StringExp>(0,0,$1);}
 | exp "+" exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
 | exp "-" exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
 | exp "*" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
