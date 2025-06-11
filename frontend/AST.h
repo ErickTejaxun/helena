@@ -916,20 +916,25 @@ public:
         // globals.get()->addInstruction(std::move(instCall));
     }
 
-    llvm::Value *codegen() override
-    {
+    void addBuildInFunctions(){
 
-        llvm::FunctionType* PrintfFuncTy = llvm::FunctionType::get(
-            Builder->getInt32Ty(),            // tipo de retorno i32
-            {Builder->getInt8Ty()},        // primer argumento ptr 8 Primer argumento (const char* format)
-            true                // VarAgrs (número de parametros variable)
-        );
+        llvm::Type* Int32Ty = Builder->getInt32Ty();
+        llvm::Type* PtrTy = Builder->getPtrTy();
         
-        // Declarar printf en el módulo
-        PrintfFunc = TheModule->getOrInsertFunction("printf", PrintfFuncTy);
-                
+        llvm::FunctionType* PrintfFuncTy = llvm::FunctionType::get(
+            Int32Ty,
+            {PtrTy},
+            true
+        );
+
+        llvm::FunctionCallee PrintfFunc = TheModule->getOrInsertFunction("printf", PrintfFuncTy);
+    }
+
+    llvm::Value *codegen() override
+    {                
         InitializeModule();
         addMainCallInstruction();
+        addBuildInFunctions();
         if (!globals.get())
         {
             std::cerr << "There is no instructions for this program." << std::endl;
@@ -967,13 +972,25 @@ class PrintInstr : public Instruction{
     int line, column;
     std::unique_ptr<Expression> exp; 
 
-    public:
+    public:        
         PrintInstr(int line, int column, std::unique_ptr<Expression> exp): line(line), column(column), exp(std::move(exp)){}
     
         llvm::Value *codegen() override {
-            llvm::Value *expr = exp.get()->codegen();            
-            Builder->CreateCall(PrintfFunc,{expr},"call_printf");
-        }        
+            llvm::Value *value = exp.get()->codegen();            
+            llvm::Function *CalleF = TheModule->getFunction("printf");            
+            std::vector<llvm::Value *> ArgsV;
+            ArgsV.push_back(value);
+
+            // llvm::Type* Int8PtrTy = Builder->getInt8Ty();
+            // llvm::Type* Int32Ty = Builder->getInt32Ty();
+    
+            // llvm::FunctionType* PrintfFuncTy = llvm::FunctionType::get(
+            //     Int32Ty,
+            //     {Int8PtrTy},
+            //     true
+            // );            
+            return Builder->CreateCall(CalleF, ArgsV, "call_printf");
+        }
 };
 
 class Import : public Instruction
