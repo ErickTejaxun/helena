@@ -260,7 +260,8 @@ public:
     llvm::Value *codegen() override
     {
         // True due the close char is like C
-        return llvm::ConstantDataArray::getString(*TheContext, value, true);
+        //return llvm::ConstantDataArray::getString(*TheContext, value, true);
+        return Builder.get()->CreateGlobalStringPtr(value);
     }
 
     Type *getType() override
@@ -977,19 +978,68 @@ class PrintInstr : public Instruction{
     
         llvm::Value *codegen() override {
             llvm::Value *value = exp.get()->codegen();            
-            llvm::Function *CalleF = TheModule->getFunction("printf");            
+            llvm::Type *valueType = exp.get()->getType()->generateLLVMType(*TheContext);
+            llvm::Value *formatString = nullptr;
+            llvm::Function *CalleF = TheModule->getFunction("printf");
+            if(!CalleF){
+                //Significa que no existe la función printf en nuestro contexto/ambiente
+                //If the functions doesn't exist, we will register it once, and only one time. 
+                llvm::FunctionType* printfType = llvm::FunctionType::get(Builder.get()->getInt32Ty(),{Builder.get()->getPtrTy()},true);
+                CalleF = llvm::Function::Create(printfType,llvm::Function::ExternalLinkage,"printf",*TheModule);
+                CalleF->setCallingConv(llvm::CallingConv::C);
+            }            
             std::vector<llvm::Value *> ArgsV;
-            ArgsV.push_back(value);
+            //ArgsV.push_back(value);
 
-            // llvm::Type* Int8PtrTy = Builder->getInt8Ty();
-            // llvm::Type* Int32Ty = Builder->getInt32Ty();
-    
-            // llvm::FunctionType* PrintfFuncTy = llvm::FunctionType::get(
-            //     Int32Ty,
-            //     {Int8PtrTy},
-            //     true
-            // );            
-            return Builder->CreateCall(CalleF, ArgsV, "call_printf");
+            //Type semantics
+            if(valueType->isIntegerTy()){
+                formatString = Builder.get()->CreateGlobalStringPtr("%d\n");
+                ArgsV.push_back(formatString);
+
+                //Bits Size
+                if(valueType->getIntegerBitWidth() < 32){
+                    //We will extend the type value if the number is larger than 32 bits
+                    value = Builder.get()->CreateSExt(value,Builder.get()->getInt32Ty(), "print_sext_int");
+                }
+                else if(valueType->getIntegerBitWidth() > 32 && valueType->getIntegerBitWidth() < 64)
+                {
+                    formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                    ArgsV[0] = formatString; //We replace the before type
+                    value = Builder.get()->CreateSExt(value, Builder.get()->getInt64Ty(),"print_sext_long");
+                }
+                else if(valueType->getIntegerBitWidth() == 64) 
+                {
+                    formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                    ArgsV[0] = formatString; //We replace the before type
+                }
+                ArgsV.push_back(value);
+            }   
+            else if(valueType->isDoubleTy() || valueType->isFloatTy()) 
+            {
+                formatString = Builder.get()->CreateGlobalStringPtr("%f\n");
+                ArgsV.push_back(formatString);
+
+                if(valueType->isFloatTy()){
+                    value = Builder.get()->CreateFPExt(value, Builder.get()->getFloatTy(), "print_ext_fp");
+                }
+                ArgsV.push_back(value);                                
+            }                                
+            else if(valueType->isPointerTy()) // If is an opaque pointer
+            {
+                //We do not know what kind of type is this type of pointer (really yes, because we are implementing ours type system ;))
+                formatString = Builder.get()->CreateGlobalStringPtr("%s\n");
+                ArgsV.push_back(formatString);
+                ArgsV.push_back(value);
+            }
+            else{
+                std::cout<<"Error perros"<<std::endl;
+                return nullptr;
+            }
+            
+            if(formatString){
+                return Builder->CreateCall(CalleF, ArgsV, "calltmp");
+            }            
+            return nullptr;
         }
 };
 

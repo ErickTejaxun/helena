@@ -30,6 +30,10 @@ three := 3
 You may pass `-p` to activate the parser debug traces, and `-s` to activate
 the scanner's.
 
+
+make clean; make -j16;
+./helen-frontend++ example.cpp
+clang out.ll -o out
 <!---
 Local Variables:
 fill-column: 76
