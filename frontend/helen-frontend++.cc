@@ -21,8 +21,7 @@
 #include "driver.hh"
 #include <fstream>
 
-int
-main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int res = 0;
   driver drv;
@@ -35,29 +34,31 @@ main (int argc, char *argv[])
   //     std::cout << drv.result << '\n';
   //   else
   //     res = 1;
-  if(argc < 2){
-    std::cout << "Error. helen-frontend++ <file>"<<std::endl;    
+  if (argc < 2)
+  {
+    std::cout << "Error. helen-frontend++ <file>" << std::endl;
     return res;
-  }    
-  
-    
-  std::ifstream inputFile(argv[1]);
-  
-  std::string line;
-  std::string programContent = "";  
-  
-  while (getline(inputFile, line)) {
-      programContent += line;
   }
-  
+
+  std::string file = std::string(argv[1]);
+  std::ifstream inputFile(file);
+
+  std::string line;
+  std::string programContent = "";
+
+  while (getline(inputFile, line))
+  {
+    programContent += line;
+  }
+
   inputFile.close();
 
-  std::cout<< programContent << std::endl;
-  
-  
-  //parse
-  if(drv.parse(argv[1])){
-    std::cout<< drv.result << std::endl;
+  //std::cout << programContent << std::endl;
+
+  // parse
+  if (drv.parse(argv[1]))
+  {
+    std::cout << drv.result << std::endl;
   }
 
   return 0;

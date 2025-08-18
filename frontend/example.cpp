@@ -5,6 +5,8 @@ int main()
     int b = 11*2;
     int c = 12;
     print(cadena);
+    print(c);
+    print(a-100);
     return 1-a*c;
 }
 

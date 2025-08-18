@@ -38,6 +38,7 @@ int driver::parse (const std::string &f)
   scan_end ();
     
   std::cout<<"Starting AST traversal." << std::endl;  
+  root.get()->name = f;
   if(root.get() != NULL){    
     //root.get()->addMainCallInstruction();     // Move to the codegen 
     root.get()->codegen();

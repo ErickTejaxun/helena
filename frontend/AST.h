@@ -17,7 +17,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Type.h"
 
-#include <string.h>
+#include <string>
 #include <stdio.h>
 #include <map>
 #include <iostream>
@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <typeinfo> // Debug
+#include <algorithm>
 
 class Error;
 class ASTNode;
@@ -900,9 +901,10 @@ public:
 class Program : public Instruction
 {
     std::unique_ptr<Block> imports;
-    std::unique_ptr<Block> globals;
+    std::unique_ptr<Block> globals;    
 
 public:
+    std::string name;
     Program(std::unique_ptr<Block> imports,
             std::unique_ptr<Block> globals)
         : imports(std::move(imports)),
@@ -953,7 +955,8 @@ public:
         std::cout << "------------------------------------------" << std::endl
                   << std::endl;
         // TheModule->print(llvm::errs(), nullptr);
-        const std::string &filename = "out.ll";
+        name = name.replace(name.length()-4,name.length(),"");
+        const std::string &filename = name+".ll";
         std::error_code EC;
         llvm::raw_fd_ostream outFile(filename, EC);
 

@@ -24,7 +24,7 @@ all: $(BASE)
 %.cc %.hh %.html %.gv: %.yy
 	$(BISON) $(BISONFLAGS) --html --graph -o $*.cc $<
 
-%.cc: %.ll
+%.cc: %.lex
 	$(FLEX) $(FLEXFLAGS) -o$@ $<
 
 %.o: %.cc
@@ -44,6 +44,6 @@ run: $(BASE)
 CLEANFILES =										\
   $(BASE) *.o										\
   parser.hh parser.cc parser.output parser.xml parser.html parser.gv location.hh	\
-  scanner.cc
+  scanner.cc *.ll
 clean:
 	rm -f $(CLEANFILES)
