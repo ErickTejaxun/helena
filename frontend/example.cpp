@@ -7,6 +7,9 @@ int main()
     print(cadena);
     print(c);
     print(a-100);
+    int[] nuevo = new int[10];
+    nuevo[2]= 666;
+    print(nuevo[2]);
     return 1-a*c;
 }
 

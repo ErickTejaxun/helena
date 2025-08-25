@@ -33,7 +33,7 @@
 class Error;
 class ASTNode;
 
-static std::unique_ptr<llvm::LLVMContext> TheContext;
+static std::unique_ptr<llvm::LLVMContext> Context;
 static std::unique_ptr<llvm::IRBuilder<>> Builder;
 static std::unique_ptr<llvm::Module> TheModule;
 // static std::map<std::string, llvm::Value *> NamedValues;
@@ -52,7 +52,6 @@ public:
     void setValue(llvm::Value *value) { Value = value; }
 };
 static std::map<std::string, HelenaVariable *> NamedValues;
-
 
 enum TYPE
 {
@@ -127,11 +126,11 @@ public:
 static void InitializeModule()
 {
     // Open a new context and module.
-    TheContext = std::make_unique<llvm::LLVMContext>();
-    TheModule = std::make_unique<llvm::Module>("Helena", *TheContext);
+    Context = std::make_unique<llvm::LLVMContext>();
+    TheModule = std::make_unique<llvm::Module>("Helena", *Context);
 
     // Create a new builder for the module.
-    Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+    Builder = std::make_unique<llvm::IRBuilder<>>(*Context);
 
     std::cout << "Module initialized" << std::endl;
 }
@@ -256,12 +255,12 @@ class StringExp : public Expression
     int line, column;
 
 public:
-    StringExp(int line, int column, const std::string &value) : line(line), column(column), value(value.substr(1,value.length()-2)) {}
+    StringExp(int line, int column, const std::string &value) : line(line), column(column), value(value.substr(1, value.length() - 2)) {}
 
     llvm::Value *codegen() override
     {
         // True due the close char is like C
-        //return llvm::ConstantDataArray::getString(*TheContext, value, true);
+        // return llvm::ConstantDataArray::getString(*Context, value, true);
         return Builder.get()->CreateGlobalStringPtr(value);
     }
 
@@ -285,7 +284,7 @@ public:
     llvm::Value *codegen() override
     {
         std::cout << "Integer expression node" << std::endl;
-        return llvm::ConstantInt::get(*TheContext, llvm::APInt(32, value));
+        return llvm::ConstantInt::get(*Context, llvm::APInt(32, value));
     }
 
     Type *getType() override
@@ -295,6 +294,8 @@ public:
         // localType->setIntType();
         // return localType;
     }
+
+    int getValue() { return value; }
 };
 
 class DoubleExp : public Expression
@@ -307,7 +308,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
+        return llvm::ConstantFP::get(*Context, llvm::APFloat(value));
     }
 
     Type *getType() override
@@ -325,7 +326,7 @@ public:
     FloatExp(int line, int column, float value) : line(line), column(column), value(value) {}
     llvm::Value *codegen() override
     {
-        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
+        return llvm::ConstantFP::get(*Context, llvm::APFloat(value));
     }
 
     Type *getType() override
@@ -344,7 +345,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return llvm::ConstantInt::get(*TheContext, llvm::APInt(1, value ? 1 : 0));
+        return llvm::ConstantInt::get(*Context, llvm::APInt(1, value ? 1 : 0));
     }
 
     Type *getType() override
@@ -367,6 +368,77 @@ public:
     Type *getType() override
     {
         return new Type(TNULL);
+    }
+};
+
+class VarArrayExp : public Expression
+{
+    std::string name;
+    std::unique_ptr<Expression> exp;
+    int line, column;
+
+public:
+    VarArrayExp(int line, int column, const std::string &name, std::unique_ptr<Expression> e) :
+             line(line), column(column), name(name), exp(std::move(e)) {}
+
+    std::string getName()
+    {
+        return this->name;
+    }
+
+    llvm::Value *codegen() override
+    {
+        std::cout << "Buscando variable array " << name << std::endl;
+        // llvm::Value *V = NamedValues[name];
+        HelenaVariable *V = NamedValues[name];
+        if (!V)
+        {
+            // LogErrorV("Variable not exists in this enviroment.");
+            std::cout << "No se ha encontrado la variable alv." << std::endl;
+            for (auto var : NamedValues)
+            {
+                // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>" << var.first << std::endl;
+            }
+            return nullptr;
+        }
+
+        llvm::Value *indexV = exp.get()->codegen();
+        if (!indexV)
+        {
+            std::cout << "invalid Expression :'v" << std::endl;
+            return nullptr;
+        }
+
+        // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
+
+        llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");
+        //Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+
+        // Generamos la instrucción load para obtener el valor de la dirección que se obtuvo en la instrucción anterior
+        llvm::Value *loadInst = Builder->CreateLoad(getInst->getType(), getInst, "array.element.value");
+        return loadInst;
+    }
+
+    Type *getType() override
+    {
+        std::cout << "Buscando tipo de variables array " << name << std::endl;
+        // llvm::Value *V = NamedValues[name];
+        HelenaVariable *V = NamedValues[name];
+        if (!V)
+        {
+            // LogErrorV("Variable not exists in this enviroment.");
+            std::cout << "No se ha encontrado la variable alv." << std::endl;
+            for (auto var : NamedValues)
+            {
+                // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>" << var.first << std::endl;
+            }
+            return nullptr;
+        }
+        std::cout << "Variable " << name << " Tipo: " << std::endl;
+        V->getType()->generateLLVMType(*Context)->print(llvm::errs());
+        return V->getType();
     }
 };
 
@@ -401,7 +473,7 @@ public:
         }
 
         // Aplicar verificacion de tipo de llamada si de referencia o por valor.
-        return Builder->CreateLoad(V->getType()->generateLLVMType(*TheContext), V->getValue());
+        return Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
     }
 
     Type *getType() override
@@ -421,7 +493,7 @@ public:
             return nullptr;
         }
         std::cout << "Variable " << name << " Tipo: " << std::endl;
-        V->getType()->generateLLVMType(*TheContext)->print(llvm::errs());
+        V->getType()->generateLLVMType(*Context)->print(llvm::errs());
         return V->getType();
     }
 };
@@ -447,7 +519,7 @@ public:
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
 
-        if (typeL->generateLLVMType(*TheContext) == typeR->generateLLVMType(*TheContext))
+        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context))
         {
             return Builder->CreateAdd(l, r);
         }
@@ -508,7 +580,7 @@ public:
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
 
-        if (typeL->generateLLVMType(*TheContext) == typeR->generateLLVMType(*TheContext))
+        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context))
         {
             return Builder->CreateSub(l, r);
         }
@@ -570,7 +642,7 @@ public:
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
 
-        if (typeL->generateLLVMType(*TheContext) == typeR->generateLLVMType(*TheContext))
+        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context))
         {
             return Builder->CreateMul(l, r);
         }
@@ -632,7 +704,7 @@ public:
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
 
-        if (typeL->generateLLVMType(*TheContext) == typeR->generateLLVMType(*TheContext))
+        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context))
         {
             return Builder->CreateUDiv(l, r);
         }
@@ -850,12 +922,12 @@ public:
         std::vector<llvm::Type *> functionType(formalParameters.get()->getParamsNumber());
         for (auto &fp : formalParameters.get()->parameters)
         {
-            functionType.push_back(fp.get()->getType()->generateLLVMType(*TheContext));
+            functionType.push_back(fp.get()->getType()->generateLLVMType(*Context));
         }
 
         std::cout << "Vector de tipos generado" << std::endl;
         llvm::FunctionType *FT =
-            llvm::FunctionType::get(type.get()->generateLLVMType(*TheContext), functionType, false);
+            llvm::FunctionType::get(type.get()->generateLLVMType(*Context), functionType, false);
 
         llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, name, TheModule.get());
 
@@ -874,7 +946,7 @@ public:
 
         // Pendiente, agregar validación de que ya exista la función.
 
-        llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", F);
+        llvm::BasicBlock *BB = llvm::BasicBlock::Create(*Context, "entry", F);
         Builder->SetInsertPoint(BB);
 
         NamedValues.clear();
@@ -901,7 +973,7 @@ public:
 class Program : public Instruction
 {
     std::unique_ptr<Block> imports;
-    std::unique_ptr<Block> globals;    
+    std::unique_ptr<Block> globals;
 
 public:
     std::string name;
@@ -919,22 +991,22 @@ public:
         // globals.get()->addInstruction(std::move(instCall));
     }
 
-    void addBuildInFunctions(){
+    void addBuildInFunctions()
+    {
 
-        llvm::Type* Int32Ty = Builder->getInt32Ty();
-        llvm::Type* PtrTy = Builder->getPtrTy();
-        
-        llvm::FunctionType* PrintfFuncTy = llvm::FunctionType::get(
+        llvm::Type *Int32Ty = Builder->getInt32Ty();
+        llvm::Type *PtrTy = Builder->getPtrTy();
+
+        llvm::FunctionType *PrintfFuncTy = llvm::FunctionType::get(
             Int32Ty,
             {PtrTy},
-            true
-        );
+            true);
 
         llvm::FunctionCallee PrintfFunc = TheModule->getOrInsertFunction("printf", PrintfFuncTy);
     }
 
     llvm::Value *codegen() override
-    {                
+    {
         InitializeModule();
         addMainCallInstruction();
         addBuildInFunctions();
@@ -946,17 +1018,17 @@ public:
         globals.get()->codegen();
 
         /*
-        if(!TheContext){
+        if(!Context){
             std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
             InitializeModule();
         }
-        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
+        return llvm::ConstantFP::get(*Context, llvm::APFloat(6.66));
         */
         std::cout << "------------------------------------------" << std::endl
                   << std::endl;
         // TheModule->print(llvm::errs(), nullptr);
-        name = name.replace(name.length()-4,name.length(),"");
-        const std::string &filename = name+".ll";
+        name = name.replace(name.length() - 4, name.length(), "");
+        const std::string &filename = name + ".ll";
         std::error_code EC;
         llvm::raw_fd_ostream outFile(filename, EC);
 
@@ -972,78 +1044,86 @@ public:
     }
 };
 
-class PrintInstr : public Instruction{
+class PrintInstr : public Instruction
+{
     int line, column;
-    std::unique_ptr<Expression> exp; 
+    std::unique_ptr<Expression> exp;
 
-    public:        
-        PrintInstr(int line, int column, std::unique_ptr<Expression> exp): line(line), column(column), exp(std::move(exp)){}
-    
-        llvm::Value *codegen() override {
-            llvm::Value *value = exp.get()->codegen();            
-            llvm::Type *valueType = exp.get()->getType()->generateLLVMType(*TheContext);
-            llvm::Value *formatString = nullptr;
-            llvm::Function *CalleF = TheModule->getFunction("printf");
-            if(!CalleF){
-                //Significa que no existe la función printf en nuestro contexto/ambiente
-                //If the functions doesn't exist, we will register it once, and only one time. 
-                llvm::FunctionType* printfType = llvm::FunctionType::get(Builder.get()->getInt32Ty(),{Builder.get()->getPtrTy()},true);
-                CalleF = llvm::Function::Create(printfType,llvm::Function::ExternalLinkage,"printf",*TheModule);
-                CalleF->setCallingConv(llvm::CallingConv::C);
-            }            
-            std::vector<llvm::Value *> ArgsV;
-            //ArgsV.push_back(value);
+public:
+    PrintInstr(int line, int column, std::unique_ptr<Expression> exp) : line(line), column(column), exp(std::move(exp)) {}
 
-            //Type semantics
-            if(valueType->isIntegerTy()){
-                formatString = Builder.get()->CreateGlobalStringPtr("%d\n");
-                ArgsV.push_back(formatString);
+    llvm::Value *codegen() override
+    {
+        llvm::Value *value = exp.get()->codegen();
+        llvm::Type *valueType = exp.get()->getType()->generateLLVMType(*Context);
+        llvm::Value *formatString = nullptr;
+        llvm::Function *CalleF = TheModule->getFunction("printf");
+        if (!CalleF)
+        {
+            // Significa que no existe la función printf en nuestro contexto/ambiente
+            // If the functions doesn't exist, we will register it once, and only one time.
+            llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.get()->getInt32Ty(), {Builder.get()->getPtrTy()}, true);
+            CalleF = llvm::Function::Create(printfType, llvm::Function::ExternalLinkage, "printf", *TheModule);
+            CalleF->setCallingConv(llvm::CallingConv::C);
+        }
+        std::vector<llvm::Value *> ArgsV;
+        // ArgsV.push_back(value);
 
-                //Bits Size
-                if(valueType->getIntegerBitWidth() < 32){
-                    //We will extend the type value if the number is larger than 32 bits
-                    value = Builder.get()->CreateSExt(value,Builder.get()->getInt32Ty(), "print_sext_int");
-                }
-                else if(valueType->getIntegerBitWidth() > 32 && valueType->getIntegerBitWidth() < 64)
-                {
-                    formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
-                    ArgsV[0] = formatString; //We replace the before type
-                    value = Builder.get()->CreateSExt(value, Builder.get()->getInt64Ty(),"print_sext_long");
-                }
-                else if(valueType->getIntegerBitWidth() == 64) 
-                {
-                    formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
-                    ArgsV[0] = formatString; //We replace the before type
-                }
-                ArgsV.push_back(value);
-            }   
-            else if(valueType->isDoubleTy() || valueType->isFloatTy()) 
+        // Type semantics
+        if (valueType->isIntegerTy())
+        {
+            formatString = Builder.get()->CreateGlobalStringPtr("%d\n");
+            ArgsV.push_back(formatString);
+
+            // Bits Size
+            if (valueType->getIntegerBitWidth() < 32)
             {
-                formatString = Builder.get()->CreateGlobalStringPtr("%f\n");
-                ArgsV.push_back(formatString);
-
-                if(valueType->isFloatTy()){
-                    value = Builder.get()->CreateFPExt(value, Builder.get()->getFloatTy(), "print_ext_fp");
-                }
-                ArgsV.push_back(value);                                
-            }                                
-            else if(valueType->isPointerTy()) // If is an opaque pointer
+                // We will extend the type value if the number is larger than 32 bits
+                value = Builder.get()->CreateSExt(value, Builder.get()->getInt32Ty(), "print_sext_int");
+            }
+            else if (valueType->getIntegerBitWidth() > 32 && valueType->getIntegerBitWidth() < 64)
             {
-                //We do not know what kind of type is this type of pointer (really yes, because we are implementing ours type system ;))
-                formatString = Builder.get()->CreateGlobalStringPtr("%s\n");
-                ArgsV.push_back(formatString);
-                ArgsV.push_back(value);
+                formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                ArgsV[0] = formatString; // We replace the before type
+                value = Builder.get()->CreateSExt(value, Builder.get()->getInt64Ty(), "print_sext_long");
             }
-            else{
-                std::cout<<"Error perros"<<std::endl;
-                return nullptr;
+            else if (valueType->getIntegerBitWidth() == 64)
+            {
+                formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                ArgsV[0] = formatString; // We replace the before type
             }
-            
-            if(formatString){
-                return Builder->CreateCall(CalleF, ArgsV, "calltmp");
-            }            
+            ArgsV.push_back(value);
+        }
+        else if (valueType->isDoubleTy() || valueType->isFloatTy())
+        {
+            formatString = Builder.get()->CreateGlobalStringPtr("%f\n");
+            ArgsV.push_back(formatString);
+
+            if (valueType->isFloatTy())
+            {
+                value = Builder.get()->CreateFPExt(value, Builder.get()->getFloatTy(), "print_ext_fp");
+            }
+            ArgsV.push_back(value);
+        }
+        else if (valueType->isPointerTy()) // If is an opaque pointer
+        {
+            // We do not know what kind of type is this type of pointer (really yes, because we are implementing ours type system ;))
+            formatString = Builder.get()->CreateGlobalStringPtr("%s\n");
+            ArgsV.push_back(formatString);
+            ArgsV.push_back(value);
+        }
+        else
+        {
+            std::cout << "Error perros" << std::endl;
             return nullptr;
         }
+
+        if (formatString)
+        {
+            return Builder->CreateCall(CalleF, ArgsV, "calltmp");
+        }
+        return nullptr;
+    }
 };
 
 class Import : public Instruction
@@ -1096,11 +1176,11 @@ public:
         block.get()->codegen();
 
         /*
-        if(!TheContext){
+        if(!Context){
             std::cerr << "Error, LLVMContext has not been initialized"<< std::endl;
             InitializeModule();
         }
-        return llvm::ConstantFP::get(*TheContext, llvm::APFloat(6.66));
+        return llvm::ConstantFP::get(*Context, llvm::APFloat(6.66));
         */
         return nullptr;
     }
@@ -1136,7 +1216,7 @@ public:
 
         for (const std::string &id : ids)
         {
-            llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*TheContext), 0, id);
+            llvm::AllocaInst *allocation = Builder->CreateAlloca(type.get()->generateLLVMType(*Context), 0, id);
             HelenaVariable *Variable = new HelenaVariable(allocation, type.get());
             // Variable->setValue (allocation);
             // Variable->setType(type.get());
@@ -1154,6 +1234,46 @@ public:
         }
 
         return nullptr; // Placeholder
+    }
+};
+
+class DeclarationA : public Instruction
+{
+    std::string id;
+    int line, column;
+    std::unique_ptr<Expression> valueE;
+    std::unique_ptr<Type> type;
+    std::unique_ptr<Type> typeE;
+
+public:
+    DeclarationA(int l, int c, std::unique_ptr<Type> type, const std::string &id, std::unique_ptr<Type> typeE, std::unique_ptr<Expression> exp) : line(l), column(c), type(std::move(type)), id(std::move(id)), typeE(std::move(typeE)), valueE(std::move(exp)) {};
+
+    llvm::Value *codegen() override
+    {
+        std::cout << "Array declaration " << std::endl;
+
+        llvm::Value *expV = valueE.get()->codegen();
+        llvm::Type *expType = valueE.get()->getType()->generateLLVMType(*Context);
+        llvm::Type *ArrayType = type.get()->generateLLVMType(*Context);
+        if (ArrayType == expType)
+        {
+            if (IntExp *actualExpression = dynamic_cast<IntExp *>(valueE.get()))
+            {
+                llvm::ArrayType *newType = llvm::ArrayType::get(ArrayType, actualExpression->getValue());
+
+                llvm::AllocaInst *allocation = Builder->CreateAlloca(newType, nullptr, id);
+                HelenaVariable *Variable = new HelenaVariable(allocation, type.get());
+                NamedValues[id] = Variable;
+                return allocation;
+            }
+            else
+            {
+                llvm::ArrayType *newType = llvm::ArrayType::get(ArrayType, 0);
+            }
+            // newType->setArraySize(llvm::ConstantInt::get(valueE.get()->getType(),valueE));
+        }
+        std::cout << "Error, los tipos no coinciden." << std::endl;
+        return expV; // Placeholder
     }
 };
 
@@ -1175,23 +1295,81 @@ public:
     llvm::Value *codegen() override;
 };
 
-class Assignation : public Instruction
+class Assignment : public Instruction
 {
     int line, column;
     std::string name;
     std::unique_ptr<Expression> expression;
 
 public:
-    Assignation(int line, int column, const std::string &name,
+    Assignment(int line, int column, const std::string &name,
                 std::unique_ptr<Expression> expression)
         : line(line), column(column), name(name), expression(std::move(expression)) {}
 
     llvm::Value *codegen() override
     {
-        std::cout << "Assignation Node" << std::endl;
+        std::cout << "Assignment Node" << std::endl;
         return nullptr; // Placeholder
     }
 };
+
+
+class ArrayAssignment : public Instruction
+{
+    int line, column;
+    std::string name;
+    std::unique_ptr<Expression> indexExp;
+    std::unique_ptr<Expression> exp;    
+
+public:
+    ArrayAssignment(int line, int column, const std::string &name,
+                std::unique_ptr<Expression> iExp,
+                std::unique_ptr<Expression> exp)
+        : line(line), column(column), name(name), indexExp(std::move(iExp)), exp(std::move(exp)) {}
+
+        
+    llvm::Value *codegen() override
+    {
+        std::cout << "Buscando variable array " << name << std::endl;
+        // llvm::Value *V = NamedValues[name];
+        HelenaVariable *V = NamedValues[name];
+        if (!V)
+        {
+            // LogErrorV("Variable not exists in this enviroment.");
+            std::cout << "No se ha encontrado la variable alv." << std::endl;
+            for (auto var : NamedValues)
+            {
+                // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>" << var.first << std::endl;
+            }
+            return nullptr;
+        }
+
+        //Validamos el índice
+        llvm::Value *indexV = indexExp.get()->codegen();
+        if (!indexV)
+        {
+            std::cout << "invalid Expression :'v" << std::endl;
+            return nullptr;
+        }
+
+        //Validamos el nuevo valor 
+        // ¿Dónde valimos los tipos? PTM
+        llvm::Value *newValue = exp.get()->codegen();
+        if(!newValue){
+            std::cout<<"Invalid new value"<<std::endl;
+            return nullptr;
+        }
+
+        // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
+        llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");        
+
+        // Generamos la instrucción store para guardar el valor nuevo.
+        return Builder->CreateStore(newValue,getInst);
+    }
+
+};
+
 
 class For : public Instruction
 {

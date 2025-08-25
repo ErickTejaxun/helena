@@ -143,12 +143,15 @@ stringchar \"(\\.|[^"\\])*\"
 ";"        return yy::parser::make_SEMICOLON (loc);
 "{"        return yy::parser::make_LCBRACKET (loc);
 "}"        return yy::parser::make_RCBRACKET (loc);
+"["        return yy::parser::make_LBRACKET (loc);
+"]"        return yy::parser::make_RBRACKET (loc);
 ","        return yy::parser::make_COMMA (loc);
 "int"        return yy::parser::make_TINT (loc);
 "double"     return yy::parser::make_TDOUBLE (loc);
 "return"     return yy::parser::make_RETURN (loc);
 "string"     return yy::parser::make_TSTRING (loc);
 "print"     return yy::parser::make_PRINT (loc);
+"new"     return yy::parser::make_NEW (loc);
 {decimal}      return make_NUMBERD (yytext, loc);
 {stringchar}   return yy::parser::make_STRING (yytext, loc);
 {int}      return make_NUMBER (yytext, loc);

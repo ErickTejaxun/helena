@@ -62,12 +62,15 @@
   SEMICOLON ";"
   LCBRACKET "{"
   RCBRACKET "}"
+  LBRACKET "["
+  RBRACKET "]"  
   COMMA ","
   TINT "int"
   TDOUBLE "double"
   TSTRING "string"
   RETURN "return"
   PRINT "print"
+  NEW new
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -79,6 +82,7 @@
 //%nterm <std::unique_ptr<Block>> block
 %nterm <std::unique_ptr<Block>> linstructions
 %nterm <std::unique_ptr<Instruction>> assignment
+%nterm <std::unique_ptr<Instruction>>aassignment
 %nterm <std::unique_ptr<Instruction>> instruction
 %nterm <std::unique_ptr<Program>> program
 %nterm <std::unique_ptr<FunctionInst>> function
@@ -90,6 +94,7 @@
 %nterm <std::unique_ptr<Instruction>> returni 
 %nterm <std::unique_ptr<Instruction>> instructionf
 %nterm <std::unique_ptr<Instruction>> declaration
+%nterm <std::unique_ptr<Instruction>> adeclaration
 %nterm <std::unique_ptr<Instruction>> call
 %nterm <std::unique_ptr<Instruction>> print
 
@@ -135,6 +140,9 @@ linstructionf:
 
 instructionf:
   declaration { $$ = std::move($1);}
+| adeclaration { $$= std::move($1);}
+| assignment { $$= std::move($1);}
+| aassignment { $$= std::move($1);}
 | call { $$ = std::move($1);}
 | returni { $$ = std::move($1);}
 | print { $$ = std::move($1);}
@@ -150,6 +158,10 @@ call:
 
 declaration: 
   type "identifier" "=" exp ";"  { $$=std::make_unique<Declaration>(0,0,std::move($1), $2,std::move($4));}
+;
+
+adeclaration:
+  type "[" "]" "identifier" "=" NEW type "[" exp "]" ";" { $$=std::make_unique<DeclarationA>(0,0,std::move($1),$4,std::move($7),std::move($9));}  
 ;
 
 returni:
@@ -172,8 +184,13 @@ fparameter:
 ;
 
 assignment:
-  "identifier" "=" exp ";"{ $$= std::make_unique<Assignation>(0,0,std::move($1),std::move($3));}
+  "identifier" "=" exp ";"{ $$= std::make_unique<Assignment>(0,0,std::move($1),std::move($3));}
   ;
+
+aassignment:
+  "identifier" "[" exp "]" "=" exp ";"{ $$= std::make_unique<ArrayAssignment>(0,0,std::move($1),std::move($3), std::move($6)); }
+  ;  
+
 
 %left "+" "-";
 %left "*" "/";
@@ -190,6 +207,7 @@ exp:
 | exp "**" exp  { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
 | exp "/" exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
 | "(" exp ")"   { $$ = std::move($2); }
+| "identifier" "[" exp "]" { $$ = std::make_unique<VarArrayExp>(0,0,std::move($1),std::move($3));}
 ;
 %%
 
