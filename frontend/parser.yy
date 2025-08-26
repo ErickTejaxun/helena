@@ -56,7 +56,12 @@
   PLUS    "+"
   POWER   "**"
   STAR    "*"
-  SLASH   "/"
+  DIV    "/"
+  EQ      "=="
+  GT      ">"
+  GET      ">="
+  LT      "<"
+  LET      "<="
   LPAREN  "("
   RPAREN  ")"
   SEMICOLON ";"
@@ -70,7 +75,8 @@
   TSTRING "string"
   RETURN "return"
   PRINT "print"
-  NEW new
+  WHILE "while"
+  NEW "new"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -97,7 +103,7 @@
 %nterm <std::unique_ptr<Instruction>> adeclaration
 %nterm <std::unique_ptr<Instruction>> call
 %nterm <std::unique_ptr<Instruction>> print
-
+%nterm <std::unique_ptr<Instruction>> loopwhile
 
 %printer { yyo << "Error---"; } <*>;
 
@@ -146,6 +152,11 @@ instructionf:
 | call { $$ = std::move($1);}
 | returni { $$ = std::move($1);}
 | print { $$ = std::move($1);}
+| loopwhile {$$ = std::move($1);}
+;
+
+loopwhile:
+  WHILE "(" exp ")" blockf { $$= std::make_unique<While>(0,0,std::move($3), std::move($5));}
 ;
 
 print :
@@ -201,11 +212,16 @@ exp:
 |  NUMBERD      { $$ = std::make_unique<DoubleExp>(0,0,std::move($1));}   
 | "identifier"  { $$ = std::make_unique<VarExp>(0,0,std::move($1));}
 | "stringchar"  { $$ = std::make_unique<StringExp>(0,0,$1);}
-| exp "+" exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
-| exp "-" exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
-| exp "*" exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
-| exp "**" exp  { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
-| exp "/" exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
+| exp PLUS exp   { $$ = std::make_unique<AddExp>(0,0,std::move($1),std::move($3));}
+| exp MINUS exp   { $$ = std::make_unique<SubExp>(0,0,std::move($1),std::move($3));}
+| exp STAR exp   { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
+| exp POWER exp  { $$ = std::make_unique<MulExp>(0,0,std::move($1),std::move($3));}
+| exp DIV exp   { $$ = std::make_unique<DivExp>(0,0,std::move($1),std::move($3));}
+| exp GT exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),1);}
+| exp GET exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),2);}
+| exp LT exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),3);}
+| exp LET exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),4);}
+| exp EQ exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),5);}
 | "(" exp ")"   { $$ = std::move($2); }
 | "identifier" "[" exp "]" { $$ = std::make_unique<VarArrayExp>(0,0,std::move($1),std::move($3));}
 ;

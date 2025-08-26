@@ -86,6 +86,10 @@ public:
         type = TSTRING;
     }
 
+    bool isNumeric(){
+        return type==TINT || type == TDOUBLE || type == TCHAR ;
+    }
+
     llvm::Type *generateLLVMType(llvm::LLVMContext &context)
     {
         switch (type)
@@ -745,6 +749,61 @@ public:
     }
 };
 
+class CompExp : public Expression{
+    int line, column;
+    std::unique_ptr<Expression> l;
+    std::unique_ptr<Expression> r;
+    int operation;
+
+    public :
+        CompExp(int l, int c, std::unique_ptr<Expression> left, std::unique_ptr<Expression> r, int op)  
+            : line(l), column(c), l(std::move(left)), r(std::move(r)), operation(op) {
+
+            }
+
+        llvm::Value *codegen() override{
+            std::cout<<"Comp Expression AST"<<std::endl;
+
+            llvm::Value * lV= l.get()->codegen();
+            Type *lrT = l.get()->getType();
+            llvm::Type *lT = lrT->generateLLVMType(*Context);
+            
+            llvm::Value * rV= r.get()->codegen();
+            Type *rrT = r.get()->getType();
+            llvm::Type *rT = rrT->generateLLVMType(*Context);
+
+            std::cout<<"Valores obtenidos"<<std::endl;
+            if(lrT->isNumeric() && rrT->isNumeric()){
+                switch (operation)
+                {
+                case 1:
+                    return Builder->CreateICmpSLT(lV,rV);                    
+                case 2:
+                    return Builder->CreateICmpSLE(lV,rV);
+                case 3:
+                    return Builder->CreateICmpSGT(lV,rV);
+                case 4:
+                    return Builder->CreateICmpSGE(lV,rV);
+                case 5:
+                    return Builder->CreateICmpEQ(lV,rV);
+                default:
+                    nullptr;
+                }
+            }
+            else{
+                std::cout << "Error, values invalids" <<std::endl;
+                return nullptr;
+            }
+
+            return nullptr;
+        }
+
+        Type *getType() override{
+            return new Type(TBOOL);
+        }
+    
+};
+
 class CallExpression : public Expression
 {
     std::string id;
@@ -1398,7 +1457,38 @@ public:
     DoWhile(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        llvm::Function * parent = Builder->GetInsertBlock()->getParent();
+        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context,"do.body", parent);
+        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(*Context,"do.cond");
+        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context,"do.end");
+
+        //Creamos un salto hacia el nuevo bloque de código
+        Builder->CreateBr(bodyBlock);
+
+        //Set the enter pointer for body loop (si no, no sabe dónde empezar.)
+        Builder->SetInsertPoint(bodyBlock);
+
+        //Generamos el código del body del ciclo
+        block.get()->codegen();
+
+
+        //Cambiamos de bloque
+        Builder->CreateBr(conditionBlock);
+        Builder->SetInsertPoint(conditionBlock);
+
+        llvm::Value *conditionValue = condition.get()->codegen();
+        if(conditionValue->getType() != Builder->getInt1Ty()){
+            conditionValue = Builder->CreateICmpNE(conditionValue, Builder->getInt32(0),"loop.cond");
+        }
+
+        Builder->CreateCondBr(conditionValue, bodyBlock,endBlock);
+        
+        //parent->getBasicBlockList().push_back(endBlock);
+        endBlock->insertInto(parent);        
+        Builder->SetInsertPoint(endBlock);        
+        return nullptr;
+    }
 };
 
 class While : public Instruction
@@ -1411,7 +1501,39 @@ public:
     While(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        std::cout<<"While generation"<<std::endl;
+        llvm::Function * parent = Builder->GetInsertBlock()->getParent();
+        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context,"do.body", parent);
+        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(*Context,"do.cond");
+        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context,"do.end");
+
+        //Creamos un salto hacia el nuevo bloque de código
+        Builder->CreateBr(bodyBlock);
+
+        //Set the enter pointer for body loop (si no, no sabe dónde empezar.)
+        Builder->SetInsertPoint(bodyBlock);
+
+        //Generamos el código del body del ciclo
+        block.get()->codegen();
+
+
+        //Cambiamos de bloque
+        Builder->CreateBr(conditionBlock);
+        Builder->SetInsertPoint(conditionBlock);
+
+        llvm::Value *conditionValue = condition.get()->codegen();
+        if(conditionValue->getType() != Builder->getInt1Ty()){
+            conditionValue = Builder->CreateICmpNE(conditionValue, Builder->getInt32(0),"loop.cond");
+        }
+
+        Builder->CreateCondBr(conditionValue, bodyBlock,endBlock);
+        
+        //parent->getBasicBlockList().push_back(endBlock);
+        endBlock->insertInto(parent);        
+        Builder->SetInsertPoint(endBlock);        
+        return nullptr;
+    }
 };
 
 class IfInst : public Instruction

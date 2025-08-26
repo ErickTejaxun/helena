@@ -136,7 +136,12 @@ stringchar \"(\\.|[^"\\])*\"
 "+"        return yy::parser::make_PLUS   (loc);
 "**"       return yy::parser::make_POWER  (loc);
 "*"        return yy::parser::make_STAR   (loc);
-"/"        return yy::parser::make_SLASH  (loc);
+"/"        return yy::parser::make_DIV  (loc);
+"<"        return yy::parser::make_LT  (loc);
+"<="        return yy::parser::make_LET  (loc);
+">"        return yy::parser::make_GT  (loc);
+">="        return yy::parser::make_GET  (loc);
+"=="        return yy::parser::make_EQ  (loc);
 "("        return yy::parser::make_LPAREN (loc);
 ")"        return yy::parser::make_RPAREN (loc);
 "="        return yy::parser::make_ASSIGN (loc);
@@ -152,6 +157,7 @@ stringchar \"(\\.|[^"\\])*\"
 "string"     return yy::parser::make_TSTRING (loc);
 "print"     return yy::parser::make_PRINT (loc);
 "new"     return yy::parser::make_NEW (loc);
+"while"   return yy::parser::make_WHILE(loc);
 {decimal}      return make_NUMBERD (yytext, loc);
 {stringchar}   return yy::parser::make_STRING (yytext, loc);
 {int}      return make_NUMBER (yytext, loc);

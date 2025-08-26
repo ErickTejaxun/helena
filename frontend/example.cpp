@@ -10,6 +10,11 @@ int main()
     int[] nuevo = new int[10];
     nuevo[2]= 666*a-b+c;
     print(nuevo[2]);
+    while(b>c){
+        c = c + 1;
+        print(c);
+        print("\n");
+    }
     return 1-a*c;
 }
 
