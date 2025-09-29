@@ -6,3 +6,6 @@
 ## 082025
 - No recordaba que llvm no tiene una tabla global y uno tiene que seguir mantenerlo. 
 - Se implementó soporte para arreglos de tamaño fijo. Siguiente paso es crear para tamaños calculados en tiempo de ejecución (habrá que trabajar con los punteros de llvm.) Mañana trabajamos en eso.
+
+## 28092025
+- Adding comments support in our lexer. Now we can use /* */ to comment multiple lines. Usando multiples estados.

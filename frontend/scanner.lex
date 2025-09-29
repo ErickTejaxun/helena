@@ -122,6 +122,9 @@ stringchar \"(\\.|[^"\\])*\"
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
 %}
+
+%state IN_COMMENT
+
 %%
 %{
   // A handy shortcut to the location held by the driver.
@@ -129,9 +132,16 @@ stringchar \"(\\.|[^"\\])*\"
   // Code run each time yylex is called.
   loc.step ();
 %}
+
+"/*" BEGIN(IN_COMMENT);
+<IN_COMMENT>{
+  "*/"  BEGIN(INITIAL);
+  [^*\n]+   // eat comment in chunks
+  "*"       // eat the lone star
+  \n        yylineno++;  
+}
 {blank}+   loc.step ();
 \n+        loc.lines (yyleng); loc.step ();
-
 "-"        return yy::parser::make_MINUS  (loc);
 "+"        return yy::parser::make_PLUS   (loc);
 "**"       return yy::parser::make_POWER  (loc);
@@ -152,12 +162,17 @@ stringchar \"(\\.|[^"\\])*\"
 "]"        return yy::parser::make_RBRACKET (loc);
 ","        return yy::parser::make_COMMA (loc);
 "int"        return yy::parser::make_TINT (loc);
+"bool"        return yy::parser::make_TBOOL (loc);
 "double"     return yy::parser::make_TDOUBLE (loc);
 "return"     return yy::parser::make_RETURN (loc);
 "string"     return yy::parser::make_TSTRING (loc);
 "print"     return yy::parser::make_PRINT (loc);
 "new"     return yy::parser::make_NEW (loc);
 "while"   return yy::parser::make_WHILE(loc);
+"break"   return yy::parser::make_BREAK(loc);
+"continue"   return yy::parser::make_CONTINUE(loc);
+"true"   return yy::parser::make_TRUE(loc);
+"false"   return yy::parser::make_FALSE(loc);
 {decimal}      return make_NUMBERD (yytext, loc);
 {stringchar}   return yy::parser::make_STRING (yytext, loc);
 {int}      return make_NUMBER (yytext, loc);

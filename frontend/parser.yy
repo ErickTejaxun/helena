@@ -73,10 +73,15 @@
   TINT "int"
   TDOUBLE "double"
   TSTRING "string"
+  TBOOL "bool"
   RETURN "return"
   PRINT "print"
   WHILE "while"
   NEW "new"
+  BREAK "break"
+  CONTINUE "continue"
+  TRUE "true"
+  FALSE "false"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -104,6 +109,8 @@
 %nterm <std::unique_ptr<Instruction>> call
 %nterm <std::unique_ptr<Instruction>> print
 %nterm <std::unique_ptr<Instruction>> loopwhile
+%nterm <std::unique_ptr<Instruction>> icontinue
+%nterm <std::unique_ptr<Instruction>> ibreak
 
 %printer { yyo << "Error---"; } <*>;
 
@@ -153,6 +160,16 @@ instructionf:
 | returni { $$ = std::move($1);}
 | print { $$ = std::move($1);}
 | loopwhile {$$ = std::move($1);}
+| icontinue {$$ = std::move($1);}
+| ibreak {$$ = std::move($1);}
+;
+
+ibreak: 
+  BREAK ";" { $$ = std::make_unique<BreakInst>(0,0);}
+;
+
+icontinue: 
+  CONTINUE ";" { $$ = std::make_unique<ContinueInst>(0,0);}
 ;
 
 loopwhile:
@@ -183,6 +200,7 @@ type:
   TINT {$$ = std::make_unique<Type>(TINT);}
   | TDOUBLE {$$ = std::make_unique<Type>(TDOUBLE);}
   | TSTRING {$$ = std::make_unique<Type>(TSTRING);}
+  | TBOOL {$$ = std::make_unique<Type>(TSTRING);}
 ;
 
 fparameters: 
@@ -224,6 +242,9 @@ exp:
 | exp EQ exp   { $$ = std::make_unique<CompExp>(0,0,std::move($1),std::move($3),5);}
 | "(" exp ")"   { $$ = std::move($2); }
 | "identifier" "[" exp "]" { $$ = std::make_unique<VarArrayExp>(0,0,std::move($1),std::move($3));}
+| TRUE           { $$ = std::make_unique<BooleanExp>(0,0,true);}
+| FALSE          { $$ = std::make_unique<BooleanExp>(0,0,false);}
+|
 ;
 %%
 

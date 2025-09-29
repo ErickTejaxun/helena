@@ -29,6 +29,7 @@
 #include <optional>
 #include <typeinfo> // Debug
 #include <algorithm>
+#include <stack>
 
 class Error;
 class ASTNode;
@@ -86,32 +87,33 @@ public:
         type = TSTRING;
     }
 
-    bool isNumeric(){
-        return type==TINT || type == TDOUBLE || type == TCHAR ;
+    bool isNumeric()
+    {
+        return type == TINT || type == TDOUBLE || type == TCHAR;
     }
 
     llvm::Type *generateLLVMType(llvm::LLVMContext &context)
     {
         switch (type)
         {
-        case TINT:
-            return llvm::Type::getInt32Ty(context);
-        case TDOUBLE:
-            return llvm::Type::getDoubleTy(context);
-        case TSTRING:
-        {
-            auto int8Ty = llvm::Type::getInt8Ty(context);
-            return llvm::PointerType::get(int8Ty, 0);
-        }
-        case TBOOL:
-            return llvm::Type::getInt1Ty(context);
-        case TCHAR:
-            return llvm::Type::getInt8Ty(context);
-        case TVOID:
-            return llvm::Type::getVoidTy(context);
-        default:
-            return nullptr;
-            // On going implement classes types
+            case TINT:
+                return llvm::Type::getInt32Ty(context);
+            case TDOUBLE:
+                return llvm::Type::getDoubleTy(context);
+            case TSTRING:
+            {
+                auto int8Ty = llvm::Type::getInt8Ty(context);
+                return llvm::PointerType::get(int8Ty, 0);
+            }
+            case TBOOL:
+                return llvm::Type::getInt1Ty(context);
+            case TCHAR:
+                return llvm::Type::getInt8Ty(context);
+            case TVOID:
+                return llvm::Type::getVoidTy(context);
+            default:
+                return nullptr;
+                // On going implement classes types
         }
     }
 };
@@ -200,6 +202,9 @@ public:
 //     LogError(Str);
 //     return nullptr;
 // }
+
+static std::stack<llvm::BasicBlock*> LoopStack;
+
 
 class ASTNode
 {
@@ -349,7 +354,7 @@ public:
 
     llvm::Value *codegen() override
     {
-        return llvm::ConstantInt::get(*Context, llvm::APInt(1, value ? 1 : 0));
+        return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context),value);
     }
 
     Type *getType() override
@@ -382,8 +387,7 @@ class VarArrayExp : public Expression
     int line, column;
 
 public:
-    VarArrayExp(int line, int column, const std::string &name, std::unique_ptr<Expression> e) :
-             line(line), column(column), name(name), exp(std::move(e)) {}
+    VarArrayExp(int line, int column, const std::string &name, std::unique_ptr<Expression> e) : line(line), column(column), name(name), exp(std::move(e)) {}
 
     std::string getName()
     {
@@ -398,7 +402,7 @@ public:
         if (!V)
         {
             // LogErrorV("Variable not exists in this enviroment.");
-            std::cout << "No se ha encontrado la variable alv." << std::endl;
+            std::cout << "No se ha encontrado la variable." << std::endl;
             for (auto var : NamedValues)
             {
                 // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
@@ -417,7 +421,7 @@ public:
         // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
 
         llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");
-        //Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+        // Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
 
         // Generamos la instrucción load para obtener el valor de la dirección que se obtuvo en la instrucción anterior
         llvm::Value *loadInst = Builder->CreateLoad(getInst->getType(), getInst, "array.element.value");
@@ -461,23 +465,33 @@ public:
 
     llvm::Value *codegen() override
     {
-        std::cout << "Buscando variables " << name << std::endl;
-        // llvm::Value *V = NamedValues[name];
+        std::cout << "Buscando variable " << name << std::endl;
         HelenaVariable *V = NamedValues[name];
-        if (!V)
+        try
         {
-            // LogErrorV("Variable not exists in this enviroment.");
-            std::cout << "No se ha encontrado la variable alv." << std::endl;
-            for (auto var : NamedValues)
+            std::cout << "Nombre variable " << V->getType() << std::endl;
+            if (!V)
             {
-                // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
-                std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>" << var.first << std::endl;
+                // LogErrorV("Variable not exists in this enviroment.");                
+                for (auto var : NamedValues)
+                {
+                    // std::cout<<"<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>"<< var.second->getName().upper()<<std::endl;
+                    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>" << var.first << std::endl;
+                }
+                return nullptr;
             }
-            return nullptr;
-        }
+            // Aplicar verificacion de tipo de llamada si de referencia o por valor.
 
-        // Aplicar verificacion de tipo de llamada si de referencia o por valor.
-        return Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+            //V->getType()->generateLLVMType(*Context)->print(llvm::errs());
+            return Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+            //Builder->CreateLoad(V->getType()->generateLLVMType(*Context),llvm::ConstantInt::get(*Context, llvm::APInt(32, 100)));
+            
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error pisado." << e.what() << std::endl;
+        }
+        return nullptr;
     }
 
     Type *getType() override
@@ -749,59 +763,63 @@ public:
     }
 };
 
-class CompExp : public Expression{
+class CompExp : public Expression
+{
     int line, column;
     std::unique_ptr<Expression> l;
     std::unique_ptr<Expression> r;
     int operation;
 
-    public :
-        CompExp(int l, int c, std::unique_ptr<Expression> left, std::unique_ptr<Expression> r, int op)  
-            : line(l), column(c), l(std::move(left)), r(std::move(r)), operation(op) {
+public:
+    CompExp(int l, int c, std::unique_ptr<Expression> left, std::unique_ptr<Expression> r, int op)
+        : line(l), column(c), l(std::move(left)), r(std::move(r)), operation(op)
+    {
+    }
 
+    llvm::Value *codegen() override
+    {
+        std::cout << "Comp Expression AST**************************************" << std::endl;
+
+        llvm::Value *lV = l.get()->codegen();
+        Type *lrT = l.get()->getType();
+        llvm::Type *lT = lrT->generateLLVMType(*Context);
+
+        llvm::Value *rV = r.get()->codegen();
+        Type *rrT = r.get()->getType();
+        llvm::Type *rT = rrT->generateLLVMType(*Context);
+
+        std::cout << "Valores obtenidos" << std::endl;
+        if (lrT->isNumeric() && rrT->isNumeric())
+        {
+            switch (operation)
+            {
+            case 1:
+                return Builder->CreateICmpSLT(lV, rV);
+            case 2:
+                return Builder->CreateICmpSLE(lV, rV);
+            case 3:
+                return Builder->CreateICmpSGT(lV, rV);
+            case 4:
+                return Builder->CreateICmpSGE(lV, rV);
+            case 5:
+                return Builder->CreateICmpEQ(lV, rV);
+            default:
+                nullptr;
             }
-
-        llvm::Value *codegen() override{
-            std::cout<<"Comp Expression AST"<<std::endl;
-
-            llvm::Value * lV= l.get()->codegen();
-            Type *lrT = l.get()->getType();
-            llvm::Type *lT = lrT->generateLLVMType(*Context);
-            
-            llvm::Value * rV= r.get()->codegen();
-            Type *rrT = r.get()->getType();
-            llvm::Type *rT = rrT->generateLLVMType(*Context);
-
-            std::cout<<"Valores obtenidos"<<std::endl;
-            if(lrT->isNumeric() && rrT->isNumeric()){
-                switch (operation)
-                {
-                case 1:
-                    return Builder->CreateICmpSLT(lV,rV);                    
-                case 2:
-                    return Builder->CreateICmpSLE(lV,rV);
-                case 3:
-                    return Builder->CreateICmpSGT(lV,rV);
-                case 4:
-                    return Builder->CreateICmpSGE(lV,rV);
-                case 5:
-                    return Builder->CreateICmpEQ(lV,rV);
-                default:
-                    nullptr;
-                }
-            }
-            else{
-                std::cout << "Error, values invalids" <<std::endl;
-                return nullptr;
-            }
-
+        }
+        else
+        {
+            std::cout << "Error, values invalids" << std::endl;
             return nullptr;
         }
 
-        Type *getType() override{
-            return new Type(TBOOL);
-        }
-    
+        return nullptr;
+    }
+
+    Type *getType() override
+    {
+        return new Type(TBOOL);
+    }
 };
 
 class CallExpression : public Expression
@@ -1362,7 +1380,7 @@ class Assignment : public Instruction
 
 public:
     Assignment(int line, int column, const std::string &name,
-                std::unique_ptr<Expression> expression)
+               std::unique_ptr<Expression> expression)
         : line(line), column(column), name(name), expression(std::move(expression)) {}
 
     llvm::Value *codegen() override
@@ -1372,21 +1390,19 @@ public:
     }
 };
 
-
 class ArrayAssignment : public Instruction
 {
     int line, column;
     std::string name;
     std::unique_ptr<Expression> indexExp;
-    std::unique_ptr<Expression> exp;    
+    std::unique_ptr<Expression> exp;
 
 public:
     ArrayAssignment(int line, int column, const std::string &name,
-                std::unique_ptr<Expression> iExp,
-                std::unique_ptr<Expression> exp)
+                    std::unique_ptr<Expression> iExp,
+                    std::unique_ptr<Expression> exp)
         : line(line), column(column), name(name), indexExp(std::move(iExp)), exp(std::move(exp)) {}
 
-        
     llvm::Value *codegen() override
     {
         std::cout << "Buscando variable array " << name << std::endl;
@@ -1404,7 +1420,7 @@ public:
             return nullptr;
         }
 
-        //Validamos el índice
+        // Validamos el índice
         llvm::Value *indexV = indexExp.get()->codegen();
         if (!indexV)
         {
@@ -1412,23 +1428,22 @@ public:
             return nullptr;
         }
 
-        //Validamos el nuevo valor 
-        // ¿Dónde valimos los tipos? PTM
+        // Validamos el nuevo valor
+        //  ¿Dónde valimos los tipos? PTM
         llvm::Value *newValue = exp.get()->codegen();
-        if(!newValue){
-            std::cout<<"Invalid new value"<<std::endl;
+        if (!newValue)
+        {
+            std::cout << "Invalid new value" << std::endl;
             return nullptr;
         }
 
         // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
-        llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");        
+        llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");
 
         // Generamos la instrucción store para guardar el valor nuevo.
-        return Builder->CreateStore(newValue,getInst);
+        return Builder->CreateStore(newValue, getInst);
     }
-
 };
-
 
 class For : public Instruction
 {
@@ -1457,36 +1472,37 @@ public:
     DoWhile(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    llvm::Value *codegen() override{
-        llvm::Function * parent = Builder->GetInsertBlock()->getParent();
-        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context,"do.body", parent);
-        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(*Context,"do.cond");
-        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context,"do.end");
+    llvm::Value *codegen() override
+    {
+        llvm::Function *parent = Builder->GetInsertBlock()->getParent();
+        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context, "do.body", parent);
+        llvm::BasicBlock *headerBlock = llvm::BasicBlock::Create(*Context, "do.cond");
+        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context, "do.end");
 
-        //Creamos un salto hacia el nuevo bloque de código
+        // Creamos un salto hacia el nuevo bloque de código
         Builder->CreateBr(bodyBlock);
 
-        //Set the enter pointer for body loop (si no, no sabe dónde empezar.)
+        // Set the enter pointer for body loop (si no, no sabe dónde empezar.)
         Builder->SetInsertPoint(bodyBlock);
 
-        //Generamos el código del body del ciclo
+        // Generamos el código del body del ciclo
         block.get()->codegen();
 
-
-        //Cambiamos de bloque
-        Builder->CreateBr(conditionBlock);
-        Builder->SetInsertPoint(conditionBlock);
+        // Cambiamos de bloque
+        Builder->CreateBr(headerBlock);
+        Builder->SetInsertPoint(headerBlock);
 
         llvm::Value *conditionValue = condition.get()->codegen();
-        if(conditionValue->getType() != Builder->getInt1Ty()){
-            conditionValue = Builder->CreateICmpNE(conditionValue, Builder->getInt32(0),"loop.cond");
+        if (conditionValue->getType() != Builder->getInt1Ty())
+        {
+            conditionValue = Builder->CreateICmpNE(conditionValue, Builder->getInt32(0), "loop.cond");
         }
 
-        Builder->CreateCondBr(conditionValue, bodyBlock,endBlock);
-        
-        //parent->getBasicBlockList().push_back(endBlock);
-        endBlock->insertInto(parent);        
-        Builder->SetInsertPoint(endBlock);        
+        Builder->CreateCondBr(conditionValue, bodyBlock, endBlock);
+
+        // parent->getBasicBlockList().push_back(endBlock);
+        endBlock->insertInto(parent);
+        Builder->SetInsertPoint(endBlock);
         return nullptr;
     }
 };
@@ -1501,40 +1517,78 @@ public:
     While(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    llvm::Value *codegen() override{
-        std::cout<<"While generation"<<std::endl;
-        llvm::Function * parent = Builder->GetInsertBlock()->getParent();
-        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context,"do.body", parent);
-        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(*Context,"do.cond");
-        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context,"do.end");
+    llvm::Value *codegen() override
+    {
+        
+        std::cout << "While generation" << std::endl;
+        
+        llvm::Function *parent = Builder->GetInsertBlock()->getParent();
+        llvm::BasicBlock *headerBlock = llvm::BasicBlock::Create(*Context, "while.header",parent);
+        llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(*Context, "while.body",parent);
+        llvm::BasicBlock *endBlock = llvm::BasicBlock::Create(*Context, "while.exit",parent);
 
-        //Creamos un salto hacia el nuevo bloque de código
-        Builder->CreateBr(bodyBlock);
+        LoopStack.push(endBlock);
+        // Creamos un salto hacia el bloque cabecera
+        Builder->CreateBr(headerBlock);
 
-        //Set the enter pointer for body loop (si no, no sabe dónde empezar.)
-        Builder->SetInsertPoint(bodyBlock);
-
-        //Generamos el código del body del ciclo
-        block.get()->codegen();
-
-
-        //Cambiamos de bloque
-        Builder->CreateBr(conditionBlock);
-        Builder->SetInsertPoint(conditionBlock);
+        // Set the enter pointer for body loop (si no, no sabe dónde empezar.)
+        Builder->SetInsertPoint(headerBlock);
 
         llvm::Value *conditionValue = condition.get()->codegen();
-        if(conditionValue->getType() != Builder->getInt1Ty()){
-            conditionValue = Builder->CreateICmpNE(conditionValue, Builder->getInt32(0),"loop.cond");
-        }
-
-        Builder->CreateCondBr(conditionValue, bodyBlock,endBlock);
+        llvm::Type *boolTy = llvm::Type::getInt1Ty(*Context);
+        llvm::Value *isTrue = Builder->CreateICmpNE(conditionValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(*Context),0),"while.cond");
+        Builder->CreateCondBr(isTrue, bodyBlock, endBlock);
         
-        //parent->getBasicBlockList().push_back(endBlock);
-        endBlock->insertInto(parent);        
-        Builder->SetInsertPoint(endBlock);        
+
+        Builder->SetInsertPoint(bodyBlock);
+        block.get()->codegen();
+
+        LoopStack.pop();
+        Builder->CreateBr(headerBlock);
         return nullptr;
     }
 };
+
+
+class BreakInst: public Instruction{
+    int line, column;
+    
+    public:
+        BreakInst(int l, int c): line(l),column(c){};
+
+
+        llvm::Value * codegen() override{
+            if(LoopStack.size()==0){
+                throw std::runtime_error("Error en la pila de ciclos");
+            }
+
+            llvm::BasicBlock* exitBlock = LoopStack.top();
+            LoopStack.pop();
+            Builder->CreateBr(exitBlock);
+            return nullptr;
+
+        }
+};
+
+class ContinueInst: public Instruction{
+    int line, column;
+    
+    public:
+        ContinueInst(int l, int c): line(l),column(c){};
+
+        llvm::Value * codegen() override{
+            if(LoopStack.size()==0){
+                throw std::runtime_error("Error en la pila de ciclos");
+            }
+
+            llvm::BasicBlock* exitBlock = LoopStack.top();
+            LoopStack.pop();
+            Builder->CreateBr(exitBlock);
+            return nullptr;
+
+        }
+};
+
 
 class IfInst : public Instruction
 {
