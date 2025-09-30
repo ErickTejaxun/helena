@@ -9,3 +9,7 @@
 
 ## 28092025
 - Adding comments support in our lexer. Now we can use /* */ to comment multiple lines. Usando multiples estados.
+
+## 29092025
+- Adding comments support in our lexer. Now we can use // to comment ines. Using flex states.
+- Se implementó parcialmente la asignación ya que está asignado el valor a otro espacio en la memoria. 

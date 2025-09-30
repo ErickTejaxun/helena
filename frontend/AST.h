@@ -1386,6 +1386,25 @@ public:
     llvm::Value *codegen() override
     {
         std::cout << "Assignment Node" << std::endl;
+        HelenaVariable *V = NamedValues[name];
+        if(!V){
+            std::cout << "No se ha encontrado la variable" << std::endl;
+            return nullptr;
+        }
+
+        llvm::Value *newValue = expression.get()->codegen();
+        if (!newValue)
+        {
+            std::cout << "Invalid new value" << std::endl;
+            return nullptr;
+        }
+
+        // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.        
+        llvm::AllocaInst *varPtr = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context),nullptr,name);
+        // Generamos la instrucción store para guardar el valor nuevo.
+        return Builder->CreateStore(newValue, varPtr);
+
+
         return nullptr; // Placeholder
     }
 };
@@ -1543,8 +1562,11 @@ public:
         Builder->SetInsertPoint(bodyBlock);
         block.get()->codegen();
 
-        LoopStack.pop();
-        Builder->CreateBr(headerBlock);
+        //LoopStack.pop();
+        Builder->CreateBr(headerBlock); //Al final del bloque regresamos a validar la condición para seguir en el loop o salir.
+
+        //Ahora agregamos el bloque de salida while.exit        
+        Builder->SetInsertPoint(endBlock);
         return nullptr;
     }
 };
@@ -1563,7 +1585,7 @@ class BreakInst: public Instruction{
             }
 
             llvm::BasicBlock* exitBlock = LoopStack.top();
-            LoopStack.pop();
+            //LoopStack.pop();
             Builder->CreateBr(exitBlock);
             return nullptr;
 
@@ -1582,7 +1604,7 @@ class ContinueInst: public Instruction{
             }
 
             llvm::BasicBlock* exitBlock = LoopStack.top();
-            LoopStack.pop();
+            //LoopStack.pop();
             Builder->CreateBr(exitBlock);
             return nullptr;
 
