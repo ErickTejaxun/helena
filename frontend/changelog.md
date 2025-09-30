@@ -13,3 +13,4 @@
 ## 29092025
 - Adding comments support in our lexer. Now we can use // to comment ines. Using flex states.
 - Se implementó parcialmente la asignación ya que está asignado el valor a otro espacio en la memoria. 
+- Se ajustó los bloques para el ciclo while ya que estaban en orden incorrecto. 
