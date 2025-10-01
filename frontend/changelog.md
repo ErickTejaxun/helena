@@ -14,3 +14,10 @@
 - Adding comments support in our lexer. Now we can use // to comment ines. Using flex states.
 - Se implementó parcialmente la asignación ya que está asignado el valor a otro espacio en la memoria. 
 - Se ajustó los bloques para el ciclo while ya que estaban en orden incorrecto. 
+
+
+## 30092025
+
+- Ajustar el manejo de BB.
+- Se ajustó el while y ya funciona con operaciones básicas. 
+- Se tiene que validar por qué cuando hay asignaciones no funciona correctamente (bueno asignaciones y prints) los whiles.

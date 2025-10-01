@@ -1400,9 +1400,10 @@ public:
         }
 
         // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.        
-        llvm::AllocaInst *varPtr = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context),nullptr,name);
+        //llvm::AllocaInst *varPtr = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context),nullptr,name);
+        //llvm::AllocaInst *varPtr = Builder->CreateAlloca(llvm::Type::getInt32Ty(*Context), 0, name);
         // Generamos la instrucción store para guardar el valor nuevo.
-        return Builder->CreateStore(newValue, varPtr);
+        return Builder->CreateStore(newValue, V->getValue());
 
 
         return nullptr; // Placeholder
