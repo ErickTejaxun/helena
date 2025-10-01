@@ -82,6 +82,8 @@
   CONTINUE "continue"
   TRUE "true"
   FALSE "false"
+  IF "if"
+  ELSE "else"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -111,6 +113,8 @@
 %nterm <std::unique_ptr<Instruction>> loopwhile
 %nterm <std::unique_ptr<Instruction>> icontinue
 %nterm <std::unique_ptr<Instruction>> ibreak
+%nterm <std::unique_ptr<Instruction>> ifelse
+%nterm <std::unique_ptr<Instruction>> elseif
 
 %printer { yyo << "Error---"; } <*>;
 
@@ -162,6 +166,18 @@ instructionf:
 | loopwhile {$$ = std::move($1);}
 | icontinue {$$ = std::move($1);}
 | ibreak {$$ = std::move($1);}
+| ifelse {$$ = std::move($1);}
+;
+
+
+ifelse:
+  IF "(" exp ")" blockf elseif {$$ = std::make_unique<IfInst>(0,0,std::move($3),std::move($5),std::move($6));}
+;
+
+elseif:
+    ELSE ifelse { $$= std::move($2);}
+  | ELSE blockf { $$= std::make_unique<IfInst>(0,0,std::make_unique<BooleanExp>(0,0,true),std::move($2));}
+  | {$$ = nullptr;}
 ;
 
 ibreak: 

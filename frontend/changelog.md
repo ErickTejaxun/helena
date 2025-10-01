@@ -21,3 +21,4 @@
 - Ajustar el manejo de BB.
 - Se ajustó el while y ya funciona con operaciones básicas. 
 - Se tiene que validar por qué cuando hay asignaciones no funciona correctamente (bueno asignaciones y prints) los whiles.
+- Se comenzó a implementar if else, se agregó a la gramática y AST pero mañana implementamos la lógica para generar LLVM IR y MLIR.

@@ -1617,18 +1617,20 @@ class IfInst : public Instruction
 {
     int line, column;
     std::optional<std::unique_ptr<Expression>> condition;
-    std::optional<std::unique_ptr<IfInst>> elseIf;
+    std::optional<std::unique_ptr<Instruction>> elseIf;
     std::unique_ptr<Block> block;
 
 public:
     IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block)
         : line(line), column(column), condition(std::move(condition)), block(std::move(block)) {}
 
-    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<IfInst> elseIf)
+    IfInst(int line, int column, std::unique_ptr<Expression> condition, std::unique_ptr<Block> block, std::unique_ptr<Instruction> elseIf)
         : line(line), column(column),
           condition(std::move(condition)), block(std::move(block)), elseIf(std::move(elseIf)) {}
 
-    llvm::Value *codegen() override;
+    llvm::Value *codegen() override{
+        return nullptr;
+    }
 };
 
 class ReturnInst : public Instruction
