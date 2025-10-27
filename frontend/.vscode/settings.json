@@ -75,6 +75,8 @@
         "forward_list": "cpp",
         "semaphore": "cpp",
         "sstream": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "complex": "cpp",
+        "shared_mutex": "cpp"
     }
 }

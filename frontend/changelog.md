@@ -25,3 +25,5 @@
 
 ## 26102025
 - Se ajustó el código del scanner para generar las operaciones de comparación, estaba al revés y por eso no generaba correctamente el gt y slt.
+- Ya funciona bien los bucles. 
+- Ahora tenemos un error en los tipos cuando se hacen operaciones entre primitivos y elementos de arreglos. Mañana lo arreglamos.

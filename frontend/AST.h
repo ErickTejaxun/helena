@@ -414,18 +414,20 @@ public:
         llvm::Value *indexV = exp.get()->codegen();
         if (!indexV)
         {
-            std::cout << "invalid Expression :'v" << std::endl;
+            std::cout << "Invalid index Expression" << std::endl;
             return nullptr;
         }
 
         // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
 
         llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");
-        // Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+         Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
 
         // Generamos la instrucción load para obtener el valor de la dirección que se obtuvo en la instrucción anterior
         llvm::Value *loadInst = Builder->CreateLoad(getInst->getType(), getInst, "array.element.value");
+
         return loadInst;
+        
     }
 
     Type *getType() override
@@ -537,16 +539,36 @@ public:
         llvm::Value *l = left_expression.get()->codegen();
         llvm::Value *r = right_expression.get()->codegen();
 
-        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context))
+        if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context) && l->getType() == r->getType())
         {
+            // if(l->getType()->isVectorTy())
+            // {
+            //     l = llvm::cast<llvm::IntegerType>()
+            // }
+
+            // if(r->getType()->isIntOrIntVectorTy())
+            // {
+            //     r = Builder->CreateLoad(r->getType(), r);
+            // } 
+            
+            llvm::errs() << "Tipo value R";            
+            r->getType()->print(llvm::errs());
+            std::cout<<"----------"<< std::endl;
+
+            llvm::errs() << "Tipo value L";
+            l->getType()->print(llvm::errs());
+
+            std::cout<<"----------"<< std::endl;
+            
+            std::cout<< "Ops with type right." << std::endl;
             return Builder->CreateAdd(l, r);
         }
         else
         {
-
+            std::cout<< "Las variables parecen no ser del mismo tipo" << std::endl;
             if (l->getType()->isPointerTy())
             {
-                std::cout << "Variable type pointer" << std::endl;
+                std::cout << "Variable LEFT type pointer-------------------------------------------" << std::endl;
                 std::cout << l << std::endl;
                 l = Builder->CreateLoad(r->getType(), l);
             }
@@ -557,7 +579,7 @@ public:
 
             if (r->getType()->isPointerTy())
             {
-                std::cout << "Variable type pointer" << std::endl;
+                std::cout << "Variable RIGHT type pointer------------------------------------------" << std::endl;
                 std::cout << r->getType()->isIntegerTy() << std::endl;
                 r = Builder->CreateLoad(l->getType(), r);
             }
@@ -566,7 +588,7 @@ public:
                 // r = Builder->CreateLoad(r->getType(),r);
             }
 
-            return Builder->CreateSub(l, r);
+            return Builder->CreateAdd(l, r);
         }
     }
 
