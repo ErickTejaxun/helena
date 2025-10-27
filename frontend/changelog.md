@@ -22,3 +22,6 @@
 - Se ajustó el while y ya funciona con operaciones básicas. 
 - Se tiene que validar por qué cuando hay asignaciones no funciona correctamente (bueno asignaciones y prints) los whiles.
 - Se comenzó a implementar if else, se agregó a la gramática y AST pero mañana implementamos la lógica para generar LLVM IR y MLIR.
+
+## 26102025
+- Se ajustó el código del scanner para generar las operaciones de comparación, estaba al revés y por eso no generaba correctamente el gt y slt.

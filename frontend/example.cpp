@@ -8,13 +8,14 @@ int main()
     print(c);
     print(a-100);
     int[] nuevo = new int[10];
-    nuevo[2]= 666*a-b+c;
+    nuevo[2]= 666*(a-110+1);
     print(nuevo[2]);
     while(b>c){
         c = c + 1;
         print(c);
         print("\n");
     }
+    print(c);
     return 1-a*c;
 }
 

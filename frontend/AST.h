@@ -794,13 +794,13 @@ public:
             switch (operation)
             {
             case 1:
-                return Builder->CreateICmpSLT(lV, rV);
-            case 2:
-                return Builder->CreateICmpSLE(lV, rV);
-            case 3:
                 return Builder->CreateICmpSGT(lV, rV);
+            case 2:
+                return Builder->CreateICmpSGE(lV, rV);                
+            case 3:
+                return Builder->CreateICmpSLT(lV, rV);
             case 4:
-                return Builder->CreateICmpSGE(lV, rV);
+                return Builder->CreateICmpSLE(lV, rV);                        
             case 5:
                 return Builder->CreateICmpEQ(lV, rV);
             default:
