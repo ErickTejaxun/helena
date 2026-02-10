@@ -15,15 +15,17 @@ int main()
     while(b>=c){
         c = c + 1;
         print(c);
-        //print(fin);
+        string cad = "-----------";
+        print(cad);
     }
     while(c>=1){
         c= c-1;
         //nuevo[1] = nuevo[1]+1;
         print(c);
     }
-    print(c);
-    nuevo[1] = nuevo[1]+1;
+    string m2 ="Saliendo segundo while";
+    print(m2);
+    nuevo[1] = 100;//nuevo[1]+1;
     print(nuevo[1]);
     return 1-a*c;
 }

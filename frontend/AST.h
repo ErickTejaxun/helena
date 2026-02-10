@@ -421,12 +421,18 @@ public:
         // Generamos la instruccion GetElementPtr GEP para obtener la dirección del elemento.
 
         llvm::Value *getInst = Builder->CreateGEP(V->getType()->generateLLVMType(*Context), V->getValue(), indexV, "array.element.ptr");
-         Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+        /*llvm::Value * i32zero = llvm::ConstantInt::get(*Context, llvm::APInt(32,0));        
+        llvm::Value * index[2] = {i32zero,i32zero};
+        llvm::Value * getInst = Builder->CreateInBoundsGEP(V->getType()->generateLLVMType(*Context),V->getValue(), llvm::ArrayRef<llvm::Value *>(index,2));
+        return getInst;*/
+        
+        Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
 
         // Generamos la instrucción load para obtener el valor de la dirección que se obtuvo en la instrucción anterior
         llvm::Value *loadInst = Builder->CreateLoad(getInst->getType(), getInst, "array.element.value");
-
         return loadInst;
+
+        
         
     }
 
@@ -572,20 +578,12 @@ public:
                 std::cout << l << std::endl;
                 l = Builder->CreateLoad(r->getType(), l);
             }
-            else
-            {
-                // l = Builder->CreateLoad(l->getType(),l);
-            }
 
             if (r->getType()->isPointerTy())
             {
                 std::cout << "Variable RIGHT type pointer------------------------------------------" << std::endl;
                 std::cout << r->getType()->isIntegerTy() << std::endl;
                 r = Builder->CreateLoad(l->getType(), r);
-            }
-            else
-            {
-                // r = Builder->CreateLoad(r->getType(),r);
             }
 
             return Builder->CreateAdd(l, r);
