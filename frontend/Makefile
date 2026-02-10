@@ -42,7 +42,7 @@ run: $(BASE)
 	./$< -
 
 CLEANFILES =										\
-  $(BASE) *.o										\
+  *.o										\
   parser.hh parser.cc parser.output parser.xml parser.html parser.gv location.hh	\
   scanner.cc *.ll
 clean:

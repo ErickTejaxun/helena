@@ -1,7 +1,9 @@
 ## 09022026
+- Se ha ajustado. Había una CreateLoad de más y también se estaba creando el segundo (que quedó como único) CreateLoad con argumentos incorrectos: se estaba usando getInst->getType que daba una dirección de 8 bytes en 
+vez del tipo de variable (en las pruebas i32, por lo tanto 4 bytes).
 - ./helen-frontend++ example.cpp ; clang example.ll -o ejecutable; ./ejecutable
 - Comenzando a trabajar para cambio de entornos. 
-- Se está trabajando eso en el archivo example3.cpp
+- Se está trabajando eso en el archivo example.cpp
 
 ## 01012026
 - Fixed the path to libs created when builded LLVM. ./build/lib

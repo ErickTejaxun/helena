@@ -25,7 +25,7 @@ int main()
     }
     string m2 ="Saliendo segundo while";
     print(m2);
-    nuevo[1] = 100;//nuevo[1]+1;
+    nuevo[1] = nuevo[1]+1;
     print(nuevo[1]);
     return 1-a*c;
 }

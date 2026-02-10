@@ -380,6 +380,7 @@ public:
     }
 };
 
+/// @brief Implementación de la expresión de acceso a elementos de arreglos.
 class VarArrayExp : public Expression
 {
     std::string name;
@@ -426,10 +427,10 @@ public:
         llvm::Value * getInst = Builder->CreateInBoundsGEP(V->getType()->generateLLVMType(*Context),V->getValue(), llvm::ArrayRef<llvm::Value *>(index,2));
         return getInst;*/
         
-        Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
+        //Builder->CreateLoad(V->getType()->generateLLVMType(*Context), V->getValue());
 
         // Generamos la instrucción load para obtener el valor de la dirección que se obtuvo en la instrucción anterior
-        llvm::Value *loadInst = Builder->CreateLoad(getInst->getType(), getInst, "array.element.value");
+        llvm::Value *loadInst = Builder->CreateLoad(V->getType()->generateLLVMType(*Context), getInst, "array.element.value");
         return loadInst;
 
         
@@ -458,6 +459,8 @@ public:
     }
 };
 
+
+/// @brief Implementación de la expressión de tipo variable.
 class VarExp : public Expression
 {
     std::string name;
