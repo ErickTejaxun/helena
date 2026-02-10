@@ -1,6 +1,7 @@
 ## 09022026
 - ./helen-frontend++ example.cpp ; clang example.ll -o ejecutable; ./ejecutable
 - Comenzando a trabajar para cambio de entornos. 
+- Se está trabajando eso en el archivo example3.cpp
 
 ## 01012026
 - Fixed the path to libs created when builded LLVM. ./build/lib
