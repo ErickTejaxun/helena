@@ -38,3 +38,6 @@ vez del tipo de variable (en las pruebas i32, por lo tanto 4 bytes).
 ## 16042026
 - Se agrega soporte para macos (en el makefile). 
 - Se agrega flags para evitar errores en carga debido a ruta de librerías compartidas no encontradas, se agrega flags para el linker.
+
+## 16042026 
+- Se valida que el soporte para operaciones entre vectores está funcionando correctamente (al menos para las sumas).
