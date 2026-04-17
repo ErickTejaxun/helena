@@ -35,3 +35,6 @@ vez del tipo de variable (en las pruebas i32, por lo tanto 4 bytes).
 - Ya funciona bien los bucles. 
 - Ahora tenemos un error en los tipos cuando se hacen operaciones entre primitivos y elementos de arreglos. Mañana lo arreglamos.
 
+## 16042026
+- Se agrega soporte para macos (en el makefile). 
+- Se agrega flags para evitar errores en carga debido a ruta de librerías compartidas no encontradas, se agrega flags para el linker.

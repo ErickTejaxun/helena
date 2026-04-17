@@ -270,7 +270,7 @@ public:
     {
         // True due the close char is like C
         // return llvm::ConstantDataArray::getString(*Context, value, true);
-        return Builder.get()->CreateGlobalStringPtr(value);
+        return Builder.get()->CreateGlobalString(value);
     }
 
     Type *getType() override
@@ -1172,7 +1172,7 @@ public:
         // Type semantics
         if (valueType->isIntegerTy())
         {
-            formatString = Builder.get()->CreateGlobalStringPtr("%d\n");
+            formatString = Builder.get()->CreateGlobalString("%d\n");
             ArgsV.push_back(formatString);
 
             // Bits Size
@@ -1183,20 +1183,20 @@ public:
             }
             else if (valueType->getIntegerBitWidth() > 32 && valueType->getIntegerBitWidth() < 64)
             {
-                formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                formatString = Builder.get()->CreateGlobalString("%ld\n");
                 ArgsV[0] = formatString; // We replace the before type
                 value = Builder.get()->CreateSExt(value, Builder.get()->getInt64Ty(), "print_sext_long");
             }
             else if (valueType->getIntegerBitWidth() == 64)
             {
-                formatString = Builder.get()->CreateGlobalStringPtr("%ld\n");
+                formatString = Builder.get()->CreateGlobalString("%ld\n");
                 ArgsV[0] = formatString; // We replace the before type
             }
             ArgsV.push_back(value);
         }
         else if (valueType->isDoubleTy() || valueType->isFloatTy())
         {
-            formatString = Builder.get()->CreateGlobalStringPtr("%f\n");
+            formatString = Builder.get()->CreateGlobalString("%f\n");
             ArgsV.push_back(formatString);
 
             if (valueType->isFloatTy())
@@ -1208,7 +1208,7 @@ public:
         else if (valueType->isPointerTy()) // If is an opaque pointer
         {
             // We do not know what kind of type is this type of pointer (really yes, because we are implementing ours type system ;))
-            formatString = Builder.get()->CreateGlobalStringPtr("%s\n");
+            formatString = Builder.get()->CreateGlobalString("%s\n");
             ArgsV.push_back(formatString);
             ArgsV.push_back(value);
         }
