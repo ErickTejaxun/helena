@@ -16,7 +16,7 @@ int main()
     print(separador);
     print(nuevo[1]);
     print ("Mensaje");
-    print ("Prueba de cadena.");
+    print ("Prueba de cadena." + "prueba");
     return 0;
 }
 

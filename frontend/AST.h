@@ -17,6 +17,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Type.h"
 #include "llvm/TargetParser/Host.h"
+#include "runtime/runtime.h"
 
 #include <string>
 #include <stdio.h>
@@ -91,6 +92,10 @@ public:
     bool isNumeric()
     {
         return type == TINT || type == TDOUBLE || type == TCHAR;
+    }
+
+    bool isString(){
+        return type == TSTRING;
     }
 
     llvm::Type *generateLLVMType(llvm::LLVMContext &context)
@@ -555,27 +560,24 @@ public:
         llvm::Value *r = right_expression.get()->codegen();
 
         if (typeL->generateLLVMType(*Context) == typeR->generateLLVMType(*Context) && l->getType() == r->getType())
-        {
-            // if(l->getType()->isVectorTy())
-            // {
-            //     l = llvm::cast<llvm::IntegerType>()
-            // }
-
-            // if(r->getType()->isIntOrIntVectorTy())
-            // {
-            //     r = Builder->CreateLoad(r->getType(), r);
-            // } 
-            
-            llvm::errs() << "Tipo value R";            
+        {   
+            llvm::errs() << "Tipo value R: ";            
             r->getType()->print(llvm::errs());
             std::cout<<"----------"<< std::endl;
 
-            llvm::errs() << "Tipo value L";
+            llvm::errs() << "Tipo value L: ";
             l->getType()->print(llvm::errs());
 
             std::cout<<"----------"<< std::endl;
             
             std::cout<< "Ops with type right." << std::endl;
+
+            //String validation. En este caso sería una concatenación.
+            if(typeL->isString() && typeR->isString())
+            {
+                llvm::Function *concatFunc = TheModule->getFunction("helen_concat");
+                return Builder.get()->CreateCall(concatFunc, {l, r});
+            }
             return Builder->CreateAdd(l, r);
         }
         else
@@ -1109,6 +1111,22 @@ public:
             true);
 
         llvm::FunctionCallee PrintfFunc = TheModule->getOrInsertFunction("printf", PrintfFuncTy);
+
+        //Agregamos nueva funcion built-in para contactenacion
+
+        std::vector<llvm::Type*> concatArgs = {
+            llvm::PointerType::getUnqual(*Context.get()),
+            llvm::PointerType::getUnqual(*Context.get())
+        };
+
+        llvm::FunctionType *concatType = llvm::FunctionType::get(
+            llvm::PointerType::getUnqual(*Context.get()), 
+            concatArgs, 
+            false 
+        );
+
+        //Registramos la función. 
+        llvm::FunctionCallee concatFunc = TheModule->getOrInsertFunction("helena_concat", concatType);
     }
 
     llvm::Value *codegen() override
