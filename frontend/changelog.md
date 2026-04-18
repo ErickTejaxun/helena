@@ -41,3 +41,7 @@ vez del tipo de variable (en las pruebas i32, por lo tanto 4 bytes).
 
 ## 16042026 
 - Se valida que el soporte para operaciones entre vectores está funcionando correctamente (al menos para las sumas).
+
+## 17042026
+- Se valida que el fix para soportar operaciones entre arreglos con punteros opacos funciona para operaciones binarias. 
+- Se valida que se ha hecho cambio para utilizar punteros opacos para soportar llvm 22. 
