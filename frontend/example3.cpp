@@ -15,6 +15,8 @@ int main()
     nuevo[1] = nuevo[1]/nuevo[1];
     print(separador);
     print(nuevo[1]);
+    print ("Mensaje");
+    print ("Prueba de cadena.");
     return 0;
 }
 

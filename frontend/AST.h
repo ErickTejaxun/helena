@@ -277,7 +277,7 @@ public:
     {
         // return new Type(TSTRING);
         Type *localType = new Type();
-        localType->setIntType();
+        localType->setStringType();
         return localType;
     }
 };

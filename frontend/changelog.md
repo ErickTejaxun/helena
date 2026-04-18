@@ -45,3 +45,4 @@ vez del tipo de variable (en las pruebas i32, por lo tanto 4 bytes).
 ## 17042026
 - Se valida que el fix para soportar operaciones entre arreglos con punteros opacos funciona para operaciones binarias. 
 - Se valida que se ha hecho cambio para utilizar punteros opacos para soportar llvm 22. 
+- Se realiza un ajuste en el retorno del tipo cadena. Esto soluciona el problema de la impresión directa de cadenas. print("hola");
