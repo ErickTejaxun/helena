@@ -16,6 +16,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Type.h"
+#include "llvm/TargetParser/Host.h"
 
 #include <string>
 #include <stdio.h>
@@ -137,7 +138,12 @@ static void InitializeModule()
 
     // Create a new builder for the module.
     Builder = std::make_unique<llvm::IRBuilder<>>(*Context);
-
+    
+    //Establecer target según dónde se compile
+    
+    llvm::Triple targetTriple(llvm::sys::getDefaultTargetTriple());
+    TheModule.get()->setTargetTriple(targetTriple);
+    
     std::cout << "Module initialized" << std::endl;
 }
 
