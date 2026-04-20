@@ -64,9 +64,32 @@ cmake -G Ninja ../llvm \
         -DLLVM_ENABLE_ABI_BREAKING_CHECKS=ON \
         -DLIBOMP_OMPD_SUPPORT=OFF
 
-
+CC=clang-18
 cmake -G Ninja ../llvm \
         -DLLVM_PARALLEL_COMPILE_JOBS=7 \
+        -DLLVM_PARALLEL_LINK_JOBS=1 \
+        -DLLVM_BUILD_EXAMPLES=ON \
+        -DLLVM_TARGETS_TO_BUILD="X86" \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DLLVM_ENABLE_ASSERTIONS=ON \
+        -DLLVM_CCACHE_BUILD=OFF \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;libclc" \
+        -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly;flang' \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DLLVM_USE_LINKER=lld \
+        -DBUILD_SHARED_LIBS=ON \
+        -DLLVM_USE_SPLIT_DWARF=ON \
+        -DLLVM_OPTIMIZED_TABLEGEN=ON \
+        -DLLVM_USE_NEWPM=ON \
+        -DLLVM_ENABLE_ABI_BREAKING_CHECKS=ON \
+        -DLIBOMP_OMPD_SUPPORT=OFF
+
+
+cmake -G Ninja ../llvm \
+        -DLLVM_PARALLEL_COMPILE_JOBS=16 \
         -DLLVM_PARALLEL_LINK_JOBS=1 \
         -DLLVM_BUILD_EXAMPLES=ON \
         -DLLVM_TARGETS_TO_BUILD="X86" \
@@ -78,7 +101,7 @@ cmake -G Ninja ../llvm \
         -DLLVM_ENABLE_PROJECTS='clang;lldb;lld;mlir;clang-tools-extra;compiler-rt;polly' \
         -DCMAKE_C_COMPILER=clang \
         -DCMAKE_CXX_COMPILER=clang++ \
-        -DLLVM_USE_LINKER=gold;lld \
+        -DLLVM_USE_LINKER=lld \
         -DBUILD_SHARED_LIBS=ON \
         -DLLVM_USE_SPLIT_DWARF=ON \
         -DLLVM_OPTIMIZED_TABLEGEN=ON \
@@ -128,3 +151,26 @@ sudo update-alternatives --install /usr/local/bin/ld.gold ld.gold /home/erick/ll
 sudo update-alternatives --install /usr/local/bin/ld.so ld.so /home/erick/llvm-project/build3/bin/ld.so 180
 
 ld.bfd     ld.gold    ld.lld     ld.lld-14  ld.lld-18  ld.so
+
+
+
+cmake -G Ninja ../llvm \
+        -DLLVM_PARALLEL_COMPILE_JOBS=16 \
+        -DLLVM_PARALLEL_LINK_JOBS=1 \
+        -DLLVM_BUILD_EXAMPLES=ON \
+        -DLLVM_TARGETS_TO_BUILD="X86" \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DLLVM_ENABLE_ASSERTIONS=ON \
+        -DLLVM_CCACHE_BUILD=OFF \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DLLVM_ENABLE_PROJECTS="clang;lldb;lld;mlir;clang-tools-extra;polly;flang" \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;libclc;compiler-rt" \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DLLVM_USE_LINKER=lld \
+        -DBUILD_SHARED_LIBS=ON \
+        -DLLVM_USE_SPLIT_DWARF=ON \
+        -DLLVM_OPTIMIZED_TABLEGEN=ON \
+        -DLLVM_USE_NEWPM=ON \
+        -DLLVM_ENABLE_ABI_BREAKING_CHECKS=ON \
+        -DLIBOMP_OMPD_SUPPORT=OFF
