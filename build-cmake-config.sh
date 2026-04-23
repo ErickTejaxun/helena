@@ -155,7 +155,7 @@ ld.bfd     ld.gold    ld.lld     ld.lld-14  ld.lld-18  ld.so
 
 
 cmake -G Ninja ../llvm \
-        -DLLVM_PARALLEL_COMPILE_JOBS=16 \
+        -DLLVM_PARALLEL_COMPILE_JOBS=24 \
         -DLLVM_PARALLEL_LINK_JOBS=1 \
         -DLLVM_BUILD_EXAMPLES=ON \
         -DLLVM_TARGETS_TO_BUILD="X86" \
